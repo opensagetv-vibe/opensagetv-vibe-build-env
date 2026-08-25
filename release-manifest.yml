@@ -1,0 +1,13 @@
+schema: 1
+platform: linux/amd64
+ubuntu: "26.04"
+java: "11"
+components:
+  core: "local:opensagetv-core/main"
+  container: "local:opensagetv-container/main"
+  ffmpeg_mim: "local:opensagetv-ffmpeg-mim/main"
+  xmltv_import: "local:opensagetv-xmltv-import/main"
+policy:
+  mim_enabled_by_default: false
+  hardware_decode_default: true
+  runtime_downloads_latest: false
