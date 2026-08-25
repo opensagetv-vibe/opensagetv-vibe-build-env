@@ -1,0 +1,7 @@
+/cache/
+/output/
+/release/
+*.tar
+*.tar.zst
+*.zip
+
