@@ -9,4 +9,5 @@ tty=(); [[ "$cmd" == shell && $# -eq 0 ]] && tty=(-it)
 docker run --rm --init "${tty[@]}" \
   -v "$projects/opensagetv-core:/work/sagetv" \
   -v "$projects/opensagetv-ffmpeg-mim:/project" \
+  -v "$projects/opensagetv-xmltv-import:/workspace/xmltv-import" \
   -v "$root:/workspace/release-manifest" "$image" "$cmd" "$@"
