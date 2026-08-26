@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Changed both host wrappers to reuse one named `opensagetv-dev` container for
+  every Core, FFmpeg/MIM, XMLTV, test, and shell operation.
+- Stopped rebuilding the development image during every `all` run. The image is
+  now built automatically only when absent and explicitly with `image` after
+  Dockerfile changes. An unreferenced superseded build image is removed after a
+  successful explicit rebuild.
+- Added `start`, `stop`, `remove-dev`, and unified output `clean` lifecycle
+  commands. A changed image causes replacement of the same named container,
+  never creation of a phase-specific container.
 - Created the unified builder and release-manifest repository scaffold.
 - Added the unified Ubuntu 26/OpenJDK 11 Core and Linux/Windows FFmpeg build image.
 - Added Bash and PowerShell one-command interfaces and a pinned component manifest.

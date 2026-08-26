@@ -14,6 +14,11 @@ case "$cmd" in
   ffmpeg-windows) ffmpeg_target windows-x64 win64 ;;
   test-mim) cd "$fm"; bash code/mim/tests/run_init_tests.sh; exec bash code/mim/tests/run_mim_tests.sh ;;
   xmltv) cd "$xmltv"; exec bash scripts/build.sh ;;
+  clean)
+    cd "$core"; bash tests/linux-modern/clean.sh
+    rm -rf "$fm/output" "$manifest/output" "$xmltv/build"
+    echo "Build outputs cleaned"
+    ;;
   all)
     mkdir -p "$manifest/output"
     report="$manifest/output/BUILD_REPORT.md"
@@ -42,5 +47,5 @@ case "$cmd" in
     trap - ERR
     echo "BUILD PASSED" ;;
   shell) exec bash "$@" ;;
-  help|*) echo "Commands: all core ffmpeg-linux ffmpeg-windows test-mim xmltv shell" ;;
+  help|*) echo "Commands: all core ffmpeg-linux ffmpeg-windows test-mim xmltv clean shell" ;;
 esac
