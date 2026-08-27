@@ -1,12 +1,15 @@
 schema: 1
+organization: "opensagetv-vibe"
 platform: linux/amd64
 ubuntu: "26.04"
 java: "11"
 components:
-  core: "local:opensagetv-core/main"
-  container: "local:opensagetv-container/main"
-  ffmpeg_mim: "local:opensagetv-ffmpeg-mim/main"
-  xmltv_import: "local:opensagetv-xmltv-import/main"
+  build_env: "local:opensagetv-vibe-build-env/ubuntu26-modern-build"
+  core: "local:opensagetv-vibe-core/ubuntu26-modern-build"
+  container: "local:opensagetv-vibe-container/ubuntu26-modern-build"
+  ffmpeg_mim: "local:opensagetv-vibe-ffmpeg-mim/ubuntu26-modern-build"
+  xmltv_import: "local:opensagetv-vibe-xmltv-import/ubuntu26-modern-build"
+  archive: "local:opensagetv-vibe-archive/main"
 policy:
   mim_enabled_by_default: false
   hardware_decode_default: true

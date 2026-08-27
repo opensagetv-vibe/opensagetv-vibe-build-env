@@ -1,6 +1,9 @@
-ARG FFMPEG_BUILDER_IMAGE=sagetv-ffmpeg-mim-builder:9.0.1-v5
+ARG FFMPEG_BUILDER_IMAGE=opensagetv-vibe-ffmpeg-mim-builder:9.0.1-v5
 FROM ${FFMPEG_BUILDER_IMAGE}
 USER root
+LABEL org.opencontainers.image.title="OpenSageTV Vibe Unified Build Environment" \
+      org.opencontainers.image.description="One development image for OpenSageTV Vibe Core, FFmpeg/MIM, XMLTV, tests, and release staging" \
+      org.opencontainers.image.source="https://github.com/opensagetv-vibe/opensagetv-vibe-build-env"
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
@@ -15,8 +18,8 @@ RUN rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodeso
     libx11-dev libxt-dev lsof make openjdk-11-jdk patchelf pkg-config procps python3 \
     python3-pil strace unzip wget xz-utils yasm zip zlib1g-dev \
  && rm -rf /var/lib/apt/lists/*
-COPY scripts/dev-entrypoint.sh /usr/local/bin/opensagetv-dev
-RUN chmod 0755 /usr/local/bin/opensagetv-dev
+COPY scripts/dev-entrypoint.sh /usr/local/bin/opensagetv-vibe-dev
+RUN chmod 0755 /usr/local/bin/opensagetv-vibe-dev
 WORKDIR /workspace
-ENTRYPOINT ["/usr/local/bin/opensagetv-dev"]
+ENTRYPOINT ["/usr/local/bin/opensagetv-vibe-dev"]
 CMD ["help"]

@@ -6,8 +6,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projects = Split-Path -Parent $root
-$image = if ($env:OPENSAGETV_BUILD_IMAGE) { $env:OPENSAGETV_BUILD_IMAGE } else { 'opensagetv-build-env:u26-j11' }
-$container = if ($env:OPENSAGETV_DEV_CONTAINER) { $env:OPENSAGETV_DEV_CONTAINER } else { 'opensagetv-dev' }
+$image = if ($env:OPENSAGETV_VIBE_BUILD_IMAGE) { $env:OPENSAGETV_VIBE_BUILD_IMAGE } else { 'opensagetv-vibe-build-env:u26-j11' }
+$container = if ($env:OPENSAGETV_VIBE_DEV_CONTAINER) { $env:OPENSAGETV_VIBE_DEV_CONTAINER } else { 'opensagetv-vibe-dev' }
 
 function Test-DockerObject([string[]]$Arguments) {
   # Windows PowerShell can promote redirected native stderr to a terminating
@@ -55,12 +55,12 @@ function Ensure-DevContainer {
 
   if (-not (Test-DockerObject @('container','inspect',$container))) {
     & docker create --name $container --init `
-      --label 'io.opensagetv.role=unified-dev' `
+      --label 'org.opensagetv.vibe.role=unified-dev' `
       --entrypoint sleep `
-      -v 'opensagetv-gradle-cache:/work/.gradle' `
-      -v "$projects\opensagetv-core:/work/sagetv" `
-      -v "$projects\opensagetv-ffmpeg-mim:/project" `
-      -v "$projects\opensagetv-xmltv-import:/workspace/xmltv-import" `
+      -v 'opensagetv-vibe-gradle-cache:/work/.gradle' `
+      -v "$projects\opensagetv-vibe-core:/work/sagetv" `
+      -v "$projects\opensagetv-vibe-ffmpeg-mim:/project" `
+      -v "$projects\opensagetv-vibe-xmltv-import:/workspace/xmltv-import" `
       -v "${root}:/workspace/release-manifest" `
       $image infinity | Out-Null
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; projects="$(cd "$root/.." && pwd)"
-image="${OPENSAGETV_BUILD_IMAGE:-opensagetv-build-env:u26-j11}"
-container="${OPENSAGETV_DEV_CONTAINER:-opensagetv-dev}"
+image="${OPENSAGETV_VIBE_BUILD_IMAGE:-opensagetv-vibe-build-env:u26-j11}"
+container="${OPENSAGETV_VIBE_DEV_CONTAINER:-opensagetv-vibe-dev}"
 cmd="${1:-help}"
 shift || true
 
@@ -31,12 +31,12 @@ container_ensure() {
   fi
   if ! docker container inspect "$container" >/dev/null 2>&1; then
     docker create --name "$container" --init \
-      --label io.opensagetv.role=unified-dev \
+      --label org.opensagetv.vibe.role=unified-dev \
       --entrypoint sleep \
-      -v opensagetv-gradle-cache:/work/.gradle \
-      -v "$projects/opensagetv-core:/work/sagetv" \
-      -v "$projects/opensagetv-ffmpeg-mim:/project" \
-      -v "$projects/opensagetv-xmltv-import:/workspace/xmltv-import" \
+      -v opensagetv-vibe-gradle-cache:/work/.gradle \
+      -v "$projects/opensagetv-vibe-core:/work/sagetv" \
+      -v "$projects/opensagetv-vibe-ffmpeg-mim:/project" \
+      -v "$projects/opensagetv-vibe-xmltv-import:/workspace/xmltv-import" \
       -v "$root:/workspace/release-manifest" \
       "$image" infinity >/dev/null
   fi
