@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import pathlib
+import re
 import stat
 import subprocess
 
@@ -96,6 +97,7 @@ def main():
     parser.add_argument("--debug-image", required=True)
     parser.add_argument("--repo", action="append", nargs=2, metavar=("NAME", "PATH"), required=True)
     parser.add_argument("--opendct-status", required=True)
+    parser.add_argument("--runtime-validation-log", required=True)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
@@ -114,6 +116,17 @@ def main():
         return {"reference": reference, "image_id": image_id, "size": size, "platform": "linux/amd64"}
 
     release_dir = pathlib.Path(args.release_dir)
+    runtime_log = pathlib.Path(args.runtime_validation_log).read_text(errors="replace")
+    restart_match = re.search(
+        r"^RUNTIME RESTART SOAK PASSED: supervisor restart \+ (\d+) container restarts$",
+        runtime_log,
+        re.MULTILINE,
+    )
+    if not restart_match or "RUNTIME CONTAINER VALIDATION PASSED" not in runtime_log:
+        raise ValueError("runtime validation log does not contain a completed restart soak")
+    restart_cycles = int(restart_match.group(1))
+    if restart_cycles < 2:
+        raise ValueError("runtime restart soak must contain at least two container restarts")
     artifacts = {}
     for path in sorted(item for item in release_dir.rglob("*") if item.is_file()):
         relative = path.relative_to(release_dir).as_posix()
@@ -136,6 +149,13 @@ def main():
         "artifacts": artifacts,
         "tests": {
             "opendct_live_channel_scan": pathlib.Path(args.opendct_status).read_text().strip(),
+            "runtime_restart_soak": {
+                "result": "PASS",
+                "supervisor_child_restarts": 1,
+                "container_restarts": restart_cycles,
+                "zombies": 0,
+                "resource_growth": "bounded",
+            },
             "mim_enabled_by_default": False,
             "hardware_decode_default": True,
         },

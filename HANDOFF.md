@@ -22,6 +22,10 @@ Passed stages:
 - Exact manifest, SHA-256 sets, three SPDX 2.3 SBOMs, compressed image exports,
   and versioned `.tar.zst` release bundle.
 
+Release assembly refuses a missing or incomplete runtime-soak log. The log is
+included under `test-results/`, hashed by the inner checksum set, and summarized
+with its exact container-restart count in `release-manifest.json`.
+
 The live physical OpenDCT/HDHomeRun scan was `SKIPPED` because this workstation
 had no commissioned endpoint. The harness accepts explicit endpoint variables
 and must be rerun on the target network. Android MiniClient and physical

@@ -5,7 +5,8 @@
 - Added the configurable runtime restart soak to `runtime-test`, `runtime-all`,
   and `all`, and forwarded its cycle, timeout, and metric-growth settings from
   both host wrappers. Unified reports now identify restart-soak validation
-  explicitly.
+  explicitly. Release assembly requires its successful log, includes that log
+  in the offline bundle, and records the exact cycle count in the manifest.
 - Made the outer release-bundle checksum record a portable
   `packages/<bundle>` path instead of the development container's absolute
   workspace path, so validation works unchanged after transfer to another

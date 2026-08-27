@@ -14,12 +14,19 @@ release_dir="$output/releases/$release_id"
 package_dir="$output/packages"
 bundle="$package_dir/$release_id.tar.zst"
 opendct_status="$output/test-results/opendct-live.status"
+runtime_validation_log="$output/test-results/runtime-validation.log"
 
 test -s "$core/output/packages/sagetv-server-x86_64.tar.gz"
 test -s "$fm/output/linux-x64/ffmpeg_MIM"
 test -s "$fm/output/windows-x64/SageTVTranscoder.exe"
 test -s "$xmltv/output/packages/XMLTVImportPlugin.jar"
 test -s "$opendct_status"
+test -s "$runtime_validation_log"
+restart_cycles="$(sed -n 's/^RUNTIME RESTART SOAK PASSED: supervisor restart + \([0-9][0-9]*\) container restarts$/\1/p' "$runtime_validation_log" | tail -1)"
+[[ "$restart_cycles" =~ ^[0-9]+$ ]] || {
+  echo "ERROR: runtime restart soak PASS marker is missing" >&2
+  exit 1
+}
 docker image inspect "$production_image" >/dev/null
 docker image inspect "$debug_image" >/dev/null
 
@@ -30,6 +37,7 @@ mkdir -p \
   "$release_dir/components/ffmpeg-mim/windows-x64" \
   "$release_dir/components/xmltv" \
   "$release_dir/images" "$release_dir/sbom" \
+  "$release_dir/test-results" \
   "$release_dir/docs/build-env" "$release_dir/docs/container" \
   "$package_dir"
 
@@ -40,6 +48,7 @@ cp -a "$fm/output/windows-x64/." "$release_dir/components/ffmpeg-mim/windows-x64
 cp "$xmltv/output/packages/XMLTVImportPlugin.jar" "$release_dir/components/xmltv/"
 cp -a "$xmltv/output/config-examples" "$release_dir/components/xmltv/"
 cp -a "$xmltv/output/test-results" "$release_dir/components/xmltv/"
+cp "$runtime_validation_log" "$release_dir/test-results/runtime-validation.log"
 cp "$container/unRAID/opensagetv-vibe/sagetv-vibe-server-u26-gpu-j11.xml" "$release_dir/"
 cp "$container/README.md" "$container/HANDOFF.md" "$container/CHANGELOG.md" \
   "$release_dir/docs/container/"
@@ -84,6 +93,7 @@ python3 "$manifest_root/scripts/generate-release-manifest.py" \
   --repo ffmpeg_mim "$fm" \
   --repo xmltv_import "$xmltv" \
   --opendct-status "$opendct_status" \
+  --runtime-validation-log "$runtime_validation_log" \
   --output "$release_dir/release-manifest.json"
 
 cat > "$release_dir/RELEASE_REPORT.md" <<EOF
@@ -96,6 +106,7 @@ cat > "$release_dir/RELEASE_REPORT.md" <<EOF
 - MIM default: disabled
 - Hardware decode default: enabled
 - OpenDCT live channel scan: $(cat "$opendct_status")
+- Runtime restart soak: PASS - one supervisor recovery and $restart_cycles container restarts
 
 | Release stage | Result |
 |---|---|
@@ -104,6 +115,7 @@ cat > "$release_dir/RELEASE_REPORT.md" <<EOF
 | Debug image export | PASS |
 | SPDX artifact SBOM | PASS |
 | SPDX production/debug image SBOMs | PASS |
+| Runtime restart soak | PASS |
 | Exact source/image/artifact manifest | PASS |
 | Offline archive integrity | PASS |
 EOF
