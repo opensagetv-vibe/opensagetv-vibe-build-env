@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Made the outer release-bundle checksum record a portable
+  `packages/<bundle>` path instead of the development container's absolute
+  workspace path, so validation works unchanged after transfer to another
+  Windows, Linux, or Unraid host.
 - Made release dirty-state detection compare staged/tracked content while
   normalizing only checkout CRLF differences. This prevents inherited
   `.gitattributes` and Windows bind mounts from falsely marking clean source

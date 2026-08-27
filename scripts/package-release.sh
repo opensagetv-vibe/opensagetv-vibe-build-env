@@ -122,7 +122,7 @@ done
 rm -f "$bundle"
 tar --zstd -cf "$bundle" -C "$output/releases" "$release_id"
 tar --zstd -tf "$bundle" >/dev/null
-sha256sum "$bundle" > "$output/SHA256SUMS"
+(cd "$output" && sha256sum "packages/$(basename "$bundle")" > SHA256SUMS)
 (cd "$output" && sha256sum -c SHA256SUMS >/dev/null)
 printf '%s\n' "$release_dir" > "$output/RELEASE_PATH"
 echo "RELEASE ASSEMBLY PASSED: $release_dir"
