@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Folded the Linux and Windows FFmpeg cross-toolchains into private stages of
+  the unified Dockerfile. Normal use now manages only
+  `opensagetv-vibe-build-env:u26-j11` and `opensagetv-vibe-dev`; the standalone
+  `opensagetv-vibe-ffmpeg-mim-builder` lifecycle is removed.
+- Pinned FFmpeg `n9.0.1` to commit
+  `bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa` and pinned all three BtbN stage
+  images by digest.
+- Changed the `image` command to build the internal toolchain and final image
+  together with BuildKit tag-plus-checksum source validation and added
+  `ffmpeg-info` validation.
+- Added targeted removal of the obsolete standalone builder tag after a
+  successful unified image rebuild.
+- Verified the consolidated image on 2026-08-27 with a clean `all` run. Core,
+  Linux and Windows FFmpeg/MIM, MIM lifecycle/media integrity, and XMLTV all
+  passed in the single reusable container. The compatibility launcher and
+  `ffmpeg-info` validation also passed, and no standalone builder image or
+  phase-specific container remained.
 - Renamed the repository to `opensagetv-vibe-build-env` under the planned
   `opensagetv-vibe` GitHub organization.
 - Renamed the unified image, reusable development container, Gradle cache,

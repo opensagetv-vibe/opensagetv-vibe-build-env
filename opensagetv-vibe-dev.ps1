@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('image','start','stop','remove-dev','all','core','ffmpeg-linux','ffmpeg-windows','test-mim','xmltv','clean','shell')]
+  [ValidateSet('image','start','stop','remove-dev','all','core','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','xmltv','clean','shell')]
   [string]$Command='all'
 )
 
@@ -8,6 +8,9 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projects = Split-Path -Parent $root
 $image = if ($env:OPENSAGETV_VIBE_BUILD_IMAGE) { $env:OPENSAGETV_VIBE_BUILD_IMAGE } else { 'opensagetv-vibe-build-env:u26-j11' }
 $container = if ($env:OPENSAGETV_VIBE_DEV_CONTAINER) { $env:OPENSAGETV_VIBE_DEV_CONTAINER } else { 'opensagetv-vibe-dev' }
+$ffmpegCommit = if ($env:OPENSAGETV_VIBE_FFMPEG_COMMIT) { $env:OPENSAGETV_VIBE_FFMPEG_COMMIT } else { 'bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa' }
+$ffmpegContext = if ($env:OPENSAGETV_VIBE_FFMPEG_SOURCE_CONTEXT) { $env:OPENSAGETV_VIBE_FFMPEG_SOURCE_CONTEXT } else { "https://github.com/FFmpeg/FFmpeg.git?tag=n9.0.1&checksum=$ffmpegCommit" }
+$legacyBuilderImage = 'opensagetv-vibe-ffmpeg-mim-builder:9.0.1-v5'
 
 function Test-DockerObject([string[]]$Arguments) {
   # Windows PowerShell can promote redirected native stderr to a terminating
@@ -21,8 +24,20 @@ function Test-DockerObject([string[]]$Arguments) {
 }
 
 function Build-Image {
-  & docker build -t $image $root
+  & docker buildx build --load --progress=plain `
+    --build-context "ffmpeg_src=$ffmpegContext" `
+    --build-arg "FFMPEG_COMMIT=$ffmpegCommit" `
+    -t $image $root
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+
+function Remove-LegacyBuilderImage {
+  if (Test-DockerObject @('image','inspect',$legacyBuilderImage)) {
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    & docker image rm $legacyBuilderImage 1>$null 2>$null
+    $ErrorActionPreference = $previousPreference
+  }
 }
 
 function Ensure-Image {
@@ -91,6 +106,7 @@ switch ($Command) {
       & docker image rm $previousImage 1>$null 2>$null
       $ErrorActionPreference = $previousPreference
     }
+    Remove-LegacyBuilderImage
     exit 0
   }
   'start' { Ensure-DevContainer; Write-Output "$container is running"; exit 0 }

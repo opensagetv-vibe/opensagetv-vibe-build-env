@@ -4,7 +4,11 @@ One Linux Docker development image and host wrappers for building Core,
 FFmpeg/MIM, XMLTV, runtime images, Unraid templates, and local release bundles
 from Windows Docker Desktop, Linux, or Unraid.
 
-This is the single supported build interface for the separated release. It extends the Ubuntu 26.04 BtbN-derived cross-builder with OpenJDK 11 and all Core dependencies, so Core, Linux/Windows FFmpeg/MIM, tests, reports, and release staging run in one image/container.
+This is the single supported build interface for the separated release. Its
+Dockerfile owns internal `ffmpeg-toolchain`, Linux-target, and Windows-target
+stages, then adds OpenJDK 11 and all Core dependencies. Only the final
+`opensagetv-vibe-build-env:u26-j11` image is loaded and managed; there is no
+separate SageTV FFmpeg builder image or build container.
 
 The wrappers maintain exactly one named development container,
 `opensagetv-vibe-dev`. Source repositories are bind-mounted, so a source edit does
@@ -44,7 +48,8 @@ Both wrappers support:
 | `clean` | Delete generated build outputs, not the container or caches |
 | `stop` | Stop the reusable container |
 | `remove-dev` | Remove only the reusable development container |
-| `image` | Rebuild the image after Dockerfile/dependency changes |
+| `image` | Build the internal FFmpeg toolchains and final unified image |
+| `ffmpeg-info` | Verify and report the two internal target toolchains |
 
 `test-mim` runs both deterministic process/control regressions and real
 FFmpeg media checks. The latter generate 29.97 and 59.94 fps MPEG-TS fixtures,
@@ -81,6 +86,13 @@ large historical archive.
 explicitly after changing the Dockerfile; the next command recreates the one
 named container against the new image. Normal source edits are visible
 immediately through the bind mounts.
+
+The `image` command uses BuildKit stages inside this repository. FFmpeg source
+is fetched at pinned commit
+`bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa` (`n9.0.1`) using BuildKit's
+tag-plus-checksum context validation, and the BtbN base/Linux/Windows images are pinned by digest in the
+Dockerfile. A local source context can be supplied with
+`OPENSAGETV_VIBE_FFMPEG_SOURCE_CONTEXT` for an offline rebuild.
 
 Low-power Unraid servers should load artifacts/images built on a faster amd64
 Docker host. The development container contains no SageTV appdata and does not
