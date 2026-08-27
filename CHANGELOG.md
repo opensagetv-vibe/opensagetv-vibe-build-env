@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added an offline/pre-publication mode to both checkout helpers. They can make
+  independent `--no-local` sibling clones from a local source root and detach
+  the supported repositories at exact commits from a resolved release
+  manifest, while preserving the existing GitHub branch workflow by default.
 - Added the configurable runtime restart soak to `runtime-test`, `runtime-all`,
   and `all`, and forwarded its cycle, timeout, and metric-growth settings from
   both host wrappers. Unified reports now identify restart-soak validation

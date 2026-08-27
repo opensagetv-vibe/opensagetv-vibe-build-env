@@ -11,6 +11,14 @@ The default development base is `ubuntu:26.04`, the Java baseline is OpenJDK
 11, and the target platform is Linux/amd64. FFmpeg 9.0.1 source and all
 toolchain bases are pinned in the Dockerfile.
 
+For a pre-publication fresh-clone audit, first clone this build-environment
+repository into an empty parent directory. Then run `checkout-all.ps1` with
+`-SkipArchive`, `-SourceRoot`, and `-ResolvedManifest`; on Linux set
+`OPENSAGETV_VIBE_SOURCE_ROOT` and `OPENSAGETV_VIBE_RESOLVED_MANIFEST` before
+`checkout-all.sh --skip-archive`. The resulting repositories are independent
+`--no-local` clones detached at the manifest commits. Run `all` from that fresh
+build-environment checkout.
+
 ## Full clean build and release
 
 Windows:

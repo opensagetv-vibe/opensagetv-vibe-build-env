@@ -68,6 +68,13 @@ output/releases/opensagetv-vibe-9.2.10-u26-j11/SHA256SUMS
 Do not hand-edit the resolved JSON manifest or SBOMs. Regenerate them with
 `release` after any artifact, image, documentation, or source-revision change.
 
+For an exact pre-publication fresh-clone audit, bootstrap a clean copy of this
+repository and give `checkout-all.ps1` a local `-SourceRoot` plus the prior
+resolved `-ResolvedManifest`. The Linux helper uses the equivalent
+`OPENSAGETV_VIBE_SOURCE_ROOT` and `OPENSAGETV_VIBE_RESOLVED_MANIFEST`
+variables. Both paths use independent Git objects and detached manifest
+commits; omit those settings after the GitHub repositories are published.
+
 ## Next commissioning work
 
 The remaining target-hardware work is tracked in the workspace `task.md`:

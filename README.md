@@ -25,7 +25,26 @@ opensagetv-vibe-xmltv-import/
 
 `checkout-all.ps1` and `checkout-all.sh` create this layout. Pass
 `-SkipArchive` or `--skip-archive` when only the supported build graph is
-needed. The helpers refuse to update a dirty repository.
+needed. The helpers refuse to update a dirty repository. Before publication,
+or for an offline audit, they can clone independent objects from a local source
+root and detach every supported repository at the commits in a resolved release
+manifest:
+
+```powershell
+.\checkout-all.ps1 -SkipArchive `
+  -SourceRoot C:\source\opensagetv-vibe `
+  -ResolvedManifest C:\release\release-manifest.json
+```
+
+```bash
+OPENSAGETV_VIBE_SOURCE_ROOT=/source/opensagetv-vibe \
+OPENSAGETV_VIBE_RESOLVED_MANIFEST=/release/release-manifest.json \
+  ./checkout-all.sh --skip-archive
+```
+
+Local clones use `--no-local`, so they do not borrow Git objects from the source
+repositories. Without these options the helpers continue to clone the planned
+GitHub organization and branch heads.
 
 ## One-command build
 
