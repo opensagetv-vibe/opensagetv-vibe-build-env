@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('image','start','stop','remove-dev','all','core','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','xmltv','clean','shell')]
+  [ValidateSet('image','start','stop','remove-dev','all','core','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','xmltv','runtime-stage','runtime-images','runtime-test','release','runtime-all','clean','shell')]
   [string]$Command='all'
 )
 
@@ -11,6 +11,14 @@ $container = if ($env:OPENSAGETV_VIBE_DEV_CONTAINER) { $env:OPENSAGETV_VIBE_DEV_
 $ffmpegCommit = if ($env:OPENSAGETV_VIBE_FFMPEG_COMMIT) { $env:OPENSAGETV_VIBE_FFMPEG_COMMIT } else { 'bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa' }
 $ffmpegContext = if ($env:OPENSAGETV_VIBE_FFMPEG_SOURCE_CONTEXT) { $env:OPENSAGETV_VIBE_FFMPEG_SOURCE_CONTEXT } else { "https://github.com/FFmpeg/FFmpeg.git?tag=n9.0.1&checksum=$ffmpegCommit" }
 $legacyBuilderImage = 'opensagetv-vibe-ffmpeg-mim-builder:9.0.1-v5'
+$forwardedEnvironment = @(
+  'OPENDCT_TEST_HOST',
+  'OPENDCT_TEST_PORT',
+  'OPENDCT_TEST_ENCODER',
+  'OPENSAGETV_VIBE_RELEASE_ID',
+  'OPENSAGETV_VIBE_SERVER_IMAGE',
+  'OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE'
+)
 
 function Test-DockerObject([string[]]$Arguments) {
   # Windows PowerShell can promote redirected native stderr to a terminating
@@ -76,7 +84,9 @@ function Ensure-DevContainer {
       -v "$projects\opensagetv-vibe-core:/work/sagetv" `
       -v "$projects\opensagetv-vibe-ffmpeg-mim:/project" `
       -v "$projects\opensagetv-vibe-xmltv-import:/workspace/xmltv-import" `
+      -v "$projects\opensagetv-vibe-container:/workspace/container" `
       -v "${root}:/workspace/release-manifest" `
+      -v '/var/run/docker.sock:/var/run/docker.sock' `
       $image infinity | Out-Null
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   }
@@ -127,7 +137,15 @@ switch ($Command) {
     Ensure-DevContainer
     # Run the bind-mounted controller so orchestration changes do not require
     # rebuilding the dependency image.
-    & docker exec $container bash /workspace/release-manifest/scripts/dev-entrypoint.sh $Command
+    $dockerArgs = @('exec')
+    foreach ($name in $forwardedEnvironment) {
+      $value = [Environment]::GetEnvironmentVariable($name)
+      if (-not [string]::IsNullOrEmpty($value)) {
+        $dockerArgs += @('--env', "${name}=${value}")
+      }
+    }
+    $dockerArgs += @($container, 'bash', '/workspace/release-manifest/scripts/dev-entrypoint.sh', $Command)
+    & docker @dockerArgs
     exit $LASTEXITCODE
   }
 }

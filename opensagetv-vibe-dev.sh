@@ -8,6 +8,11 @@ ffmpeg_context="${OPENSAGETV_VIBE_FFMPEG_SOURCE_CONTEXT:-https://github.com/FFmp
 legacy_builder_image=opensagetv-vibe-ffmpeg-mim-builder:9.0.1-v5
 cmd="${1:-help}"
 shift || true
+forwarded_environment=(
+  OPENDCT_TEST_HOST OPENDCT_TEST_PORT OPENDCT_TEST_ENCODER
+  OPENSAGETV_VIBE_RELEASE_ID OPENSAGETV_VIBE_SERVER_IMAGE
+  OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE
+)
 
 image_build() {
   docker buildx build --load --progress=plain \
@@ -50,7 +55,9 @@ container_ensure() {
       -v "$projects/opensagetv-vibe-core:/work/sagetv" \
       -v "$projects/opensagetv-vibe-ffmpeg-mim:/project" \
       -v "$projects/opensagetv-vibe-xmltv-import:/workspace/xmltv-import" \
+      -v "$projects/opensagetv-vibe-container:/workspace/container" \
       -v "$root:/workspace/release-manifest" \
+      -v /var/run/docker.sock:/var/run/docker.sock \
       "$image" infinity >/dev/null
   fi
   running="$(docker inspect "$container" --format '{{.State.Running}}')"
@@ -77,14 +84,21 @@ case "$cmd" in
     ;;
   remove-dev) container_remove ;;
   shell) container_ensure; exec docker exec -it "$container" bash "$@" ;;
-  all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|clean)
+  all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|runtime-stage|runtime-images|runtime-test|release|runtime-all|clean)
     container_ensure
     # Run the bind-mounted controller so orchestration changes do not require
     # rebuilding the dependency image.
-    exec docker exec "$container" bash /workspace/release-manifest/scripts/dev-entrypoint.sh "$cmd" "$@"
+    exec_environment=()
+    for name in "${forwarded_environment[@]}"; do
+      if [[ -n "${!name:-}" ]]; then
+        exec_environment+=(--env "$name=${!name}")
+      fi
+    done
+    exec docker exec "${exec_environment[@]}" "$container" \
+      bash /workspace/release-manifest/scripts/dev-entrypoint.sh "$cmd" "$@"
     ;;
   *)
-    echo "Usage: $0 {image|start|stop|remove-dev|all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|clean|shell}" >&2
+    echo "Usage: $0 {image|start|stop|remove-dev|all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|runtime-stage|runtime-images|runtime-test|release|runtime-all|clean|shell}" >&2
     exit 2
     ;;
 esac

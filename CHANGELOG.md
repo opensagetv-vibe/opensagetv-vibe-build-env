@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+- Integrated `opensagetv-vibe-container` into the same reusable development
+  container and mounted the host Docker socket for runtime image construction,
+  server startup, network tests, and image export.
+- Extended `all` through exact-hash Core/MIM/XMLTV staging, production and
+  debug image builds, clean-appdata SageTV health and startup, independent-peer
+  UDP discovery, TCP 42024, XMLTV no-license selection, OpenDCT V3 protocol,
+  and temporary-resource cleanup tests.
+- Added `runtime-stage`, `runtime-images`, `runtime-test`, `release`, and
+  `runtime-all` commands to both host wrappers.
+- Added explicit forwarding for optional commissioned OpenDCT endpoint settings
+  and supported release/image overrides.
+- Replaced hand-maintained local manifest placeholders with generated exact
+  component commits and dirty state, image IDs/platform/size, component
+  versions, policy defaults, and per-artifact SHA-256/size records.
+- Added versioned release assembly, compressed production/debug Docker exports,
+  release and package checksum files, and three SPDX 2.3 SBOMs covering release
+  artifacts and the installed packages in each runtime image.
+- Added stage-aware failure reporting: any build, test, image, or packaging
+  error now makes `all` write `BUILD FAILED` and return non-zero.
+- Separated build-environment and container documentation inside the release
+  bundle so same-named files cannot overwrite one another.
+- Verified the complete Windows Docker Desktop pipeline on 2026-08-27. It
+  returned `BUILD PASSED`; the physical OpenDCT scan was explicitly `SKIPPED`
+  because no commissioned endpoint was provided, while its mock wire test
+  passed.
 - Folded the Linux and Windows FFmpeg cross-toolchains into private stages of
   the unified Dockerfile. Normal use now manages only
   `opensagetv-vibe-build-env:u26-j11` and `opensagetv-vibe-dev`; the standalone

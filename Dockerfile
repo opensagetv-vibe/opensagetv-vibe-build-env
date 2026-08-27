@@ -54,23 +54,24 @@ USER root
 LABEL org.opencontainers.image.title="OpenSageTV Vibe Unified Build Environment" \
       org.opencontainers.image.description="One development image for OpenSageTV Vibe Core, FFmpeg/MIM, XMLTV, tests, and release staging" \
       org.opencontainers.image.source="https://github.com/opensagetv-vibe/opensagetv-vibe-build-env" \
-      org.opencontainers.image.version="u26-j11-toolchain-v1"
+      org.opencontainers.image.version="u26-j11-release-v2"
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 \
     JDK_HOME=/usr/lib/jvm/java-11-openjdk-amd64 \
     GRADLE_USER_HOME=/work/.gradle \
-    OPENSAGETV_VIBE_BUILD_ENV_VERSION=u26-j11-toolchain-v1
+    OPENSAGETV_VIBE_BUILD_ENV_VERSION=u26-j11-release-v2
 RUN rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.sources \
  && apt-get update && apt-get install -y --no-install-recommends \
-    autoconf automake binutils build-essential ca-certificates curl ffmpeg file g++ gcc gdb git \
+    autoconf automake binutils build-essential ca-certificates curl docker.io ffmpeg file g++ gcc gdb git gzip \
     libasound2-dev libaudio-dev libavc1394-dev libfreetype6-dev libgif-dev libiec61883-dev \
     libjpeg-dev libjpeg-turbo-progs libnsl-dev libpng-dev libpulse-dev libraw1394-dev libtiff-dev libtool \
     libx11-dev libxt-dev lsof make openjdk-11-jdk patchelf pkg-config procps python3 \
-    python3-pil strace unzip wget xz-utils yasm zip zlib1g-dev \
+    python3-pil strace unzip wget xz-utils yasm zip zlib1g-dev zstd \
  && grep -q '^VERSION_ID="26.04"$' /etc/os-release \
  && java -version \
+ && docker --version \
  && rm -rf /var/lib/apt/lists/*
 COPY scripts/dev-entrypoint.sh /usr/local/bin/opensagetv-vibe-dev
 RUN chmod 0755 /usr/local/bin/opensagetv-vibe-dev

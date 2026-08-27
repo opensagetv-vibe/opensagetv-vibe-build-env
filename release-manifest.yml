@@ -1,8 +1,13 @@
-schema: 1
+schema: 2
 organization: "opensagetv-vibe"
+release_id: "opensagetv-vibe-9.2.10-u26-j11"
 platform: linux/amd64
 ubuntu: "26.04"
 java: "11"
+versions:
+  sagetv: "9.2.10"
+  ffmpeg_mim: "0.4.5"
+  xmltv_import: "3.5"
 toolchains:
   ffmpeg_tag: "n9.0.1"
   ffmpeg_commit: "bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa"
@@ -10,14 +15,19 @@ toolchains:
   btbn_linux_x64: "ghcr.io/btbn/ffmpeg-builds/linux64-gpl-9.0@sha256:69ce235cb2437154c54db6bee4b6b8c38290a19b6daca90b5ae769896f018761"
   btbn_windows_x64: "ghcr.io/btbn/ffmpeg-builds/win64-gpl-9.0@sha256:2171aae9e82c7543a05d9f5f7674ebab3815168e2afa430c0dc7d3a5f877299a"
 components:
-  build_env: "local:opensagetv-vibe-build-env/ubuntu26-modern-build"
-  core: "local:opensagetv-vibe-core/ubuntu26-modern-build"
-  container: "local:opensagetv-vibe-container/ubuntu26-modern-build"
-  ffmpeg_mim: "local:opensagetv-vibe-ffmpeg-mim/ubuntu26-modern-build"
-  xmltv_import: "local:opensagetv-vibe-xmltv-import/ubuntu26-modern-build"
-  archive: "local:opensagetv-vibe-archive/main"
+  build_env: "https://github.com/opensagetv-vibe/opensagetv-vibe-build-env.git"
+  core: "https://github.com/opensagetv-vibe/opensagetv-vibe-core.git"
+  container: "https://github.com/opensagetv-vibe/opensagetv-vibe-container.git"
+  ffmpeg_mim: "https://github.com/opensagetv-vibe/opensagetv-vibe-ffmpeg-mim.git"
+  xmltv_import: "https://github.com/opensagetv-vibe/opensagetv-vibe-xmltv-import.git"
+resolved_manifest: "output/releases/opensagetv-vibe-9.2.10-u26-j11/release-manifest.json"
+images:
+  production: "ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11"
+  debug: "ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11-debug"
 policy:
   mim_enabled_by_default: false
   hardware_decode_default: true
   runtime_downloads_latest: false
   standalone_ffmpeg_builder_image: false
+  exact_commits_and_hashes_resolved_at_build: true
+  require_clean_release_checkout: false

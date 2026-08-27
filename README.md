@@ -1,99 +1,140 @@
-# OpenSageTV Vibe Build Environment
+# OpenSageTV Vibe unified build environment
 
-One Linux Docker development image and host wrappers for building Core,
-FFmpeg/MIM, XMLTV, runtime images, Unraid templates, and local release bundles
-from Windows Docker Desktop, Linux, or Unraid.
+This repository is the single build, test, runtime-validation, and local-release
+interface for OpenSageTV Vibe. One Ubuntu 26.04/OpenJDK 11 development image and
+one reusable container build all supported component artifacts, construct the
+production and debug server images, start a clean SageTV server, test it, and
+assemble offline release media.
 
-This is the single supported build interface for the separated release. Its
-Dockerfile owns internal `ffmpeg-toolchain`, Linux-target, and Windows-target
-stages, then adds OpenJDK 11 and all Core dependencies. Only the final
-`opensagetv-vibe-build-env:u26-j11` image is loaded and managed; there is no
-separate SageTV FFmpeg builder image or build container.
+The public development image is `opensagetv-vibe-build-env:u26-j11`; the only
+reusable development container is `opensagetv-vibe-dev`. Linux and Windows
+FFmpeg toolchains are private stages in this Dockerfile. Normal use never
+creates or manages a separate FFmpeg builder image or phase container.
 
-The wrappers maintain exactly one named development container,
-`opensagetv-vibe-dev`. Source repositories are bind-mounted, so a source edit does
-not rebuild the image or create another container. The container is recreated
-only after the build image itself changes. One named
-`opensagetv-vibe-gradle-cache` volume is retained intentionally so downloaded Gradle
-dependencies survive that recreation; it contains no SageTV appdata.
+## Required checkout layout
 
-## Commands
+Check out these sibling repositories under one parent directory:
 
-Linux/WSL:
-
-```bash
-./opensagetv-vibe-dev.sh all
+```text
+opensagetv-vibe-build-env/
+opensagetv-vibe-container/
+opensagetv-vibe-core/
+opensagetv-vibe-ffmpeg-mim/
+opensagetv-vibe-xmltv-import/
 ```
+
+`checkout-all.ps1` and `checkout-all.sh` create this layout. Pass
+`-SkipArchive` or `--skip-archive` when only the supported build graph is
+needed. The helpers refuse to update a dirty repository.
+
+## One-command build
 
 Windows Docker Desktop:
-
-```powershell
-.\opensagetv-vibe-dev.ps1 all
-```
-
-If local PowerShell policy blocks scripts, invoke the same file with:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\opensagetv-vibe-dev.ps1 all
 ```
 
-Both wrappers support:
+Linux:
+
+```bash
+./opensagetv-vibe-dev.sh all
+```
+
+Docker is the only host build dependency. The first invocation builds the
+development image if it is absent. Source repositories are bind-mounted, so
+source edits do not require an image rebuild.
+
+`all` performs, in order:
+
+1. Ubuntu, Java, toolchain, mount, and Docker-daemon validation.
+2. Clean SageTV Core Java/native build, tests, ELF/JNI/PNG validation, server
+   smoke tests, and packaging.
+3. Linux x64 and Windows x64 FFmpeg 9.0.1/MIM builds.
+4. MIM lifecycle, growing-file, join-in-progress, A/V integrity, and teardown
+   tests.
+5. XMLTV compilation and all importer regression tests.
+6. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
+7. Linux/amd64 production and debug runtime image builds.
+8. Clean-appdata health, SageTV UDP discovery, TCP service, XMLTV selection,
+   OpenDCT protocol, and resource-cleanup validation.
+9. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
+   compressed Docker exports, and the versioned release bundle.
+
+Any failed stage writes `BUILD FAILED`, records the failed stage in
+`output/BUILD_REPORT.md`, and returns non-zero. A successful run prints
+`BUILD PASSED`.
+
+## Commands
 
 | Command | Purpose |
 |---|---|
-| `start` | Create once if needed, then start `opensagetv-vibe-dev` |
-| `all` | Build and test every component in the existing container |
-| `core`, `ffmpeg-linux`, `ffmpeg-windows`, `test-mim`, `xmltv` | Run one build/test stage |
-| `shell` | Open a shell in that same container |
-| `clean` | Delete generated build outputs, not the container or caches |
-| `stop` | Stop the reusable container |
-| `remove-dev` | Remove only the reusable development container |
-| `image` | Build the internal FFmpeg toolchains and final unified image |
-| `ffmpeg-info` | Verify and report the two internal target toolchains |
+| `image` | Build the pinned private toolchain stages and unified image |
+| `start` | Create or start the one reusable development container |
+| `all` | Clean-build, test, build images, run the server, and package everything |
+| `core` | Run the complete Core Ubuntu 26 build/test/package suite |
+| `ffmpeg-linux`, `ffmpeg-windows` | Build one FFmpeg/MIM target |
+| `ffmpeg-info` | Validate both toolchains, Docker access, and container source mount |
+| `test-mim` | Run all non-Android MIM lifecycle and real-media tests |
+| `xmltv` | Build and test only the XMLTV importer JAR |
+| `runtime-stage` | Validate and stage already-built runtime artifacts |
+| `runtime-images` | Build production and debug runtime images |
+| `runtime-test` | Start a clean runtime and test health/network/plugin behavior |
+| `release` | Reassemble manifests, SBOMs, checksums, image exports, and bundle |
+| `runtime-all` | Run staging, runtime image, runtime test, and release stages |
+| `shell` | Enter the same reusable development container |
+| `clean` | Remove generated outputs, preserving the container, cache, and images |
+| `stop`, `remove-dev` | Stop or deliberately remove only the development container |
 
-`test-mim` runs both deterministic process/control regressions and real
-FFmpeg media checks. The latter generate 29.97 and 59.94 fps MPEG-TS fixtures,
-exercise completed and growing/join-in-progress inputs, repeat startup and
-teardown, verify audio/video timing and packet counts, fully decode every
-result, and reject orphan processes. Results are saved at
-`opensagetv-vibe-ffmpeg-mim/output/test-results/non-android-suite.log`.
+The container mounts the Docker socket to build and validate runtime images.
+That socket grants the development container control of the host Docker daemon;
+use this workflow only with trusted source.
 
-## Check out the complete organization
+## Optional commissioned OpenDCT scan
 
-GitHub organizations are collections of repositories, so Git cannot clone the
-entire organization with one native command. Clone this build-environment
-repository into an empty parent directory, then run the supplied Git-only
-checkout helper:
+The deterministic OpenDCT V3 mock-wire test always runs. A physical scan also
+runs when all three variables are set on the host; the wrappers forward them
+into the reusable container:
 
 ```powershell
-mkdir opensagetv-vibe
-cd opensagetv-vibe
-git clone https://github.com/opensagetv-vibe/opensagetv-vibe-build-env.git
-.\opensagetv-vibe-build-env\checkout-all.ps1
+$env:OPENDCT_TEST_HOST='192.168.10.10'
+$env:OPENDCT_TEST_PORT='9000'
+$env:OPENDCT_TEST_ENCODER='atsc_hdhomerun_10703705'
+.\opensagetv-vibe-dev.ps1 runtime-test
 ```
+
+If they are absent, the report says `SKIPPED` and why; it never records a false
+physical-scan pass.
+
+## Outputs and offline Unraid loading
+
+Final output is under `output/`:
+
+```text
+output/BUILD_REPORT.md
+output/CORE_BUILD_REPORT.md
+output/SHA256SUMS
+output/packages/opensagetv-vibe-9.2.10-u26-j11.tar.zst
+output/releases/opensagetv-vibe-9.2.10-u26-j11/
+```
+
+The release directory contains Core, Linux/Windows FFmpeg/MIM, XMLTV, the CA
+template, separated build/container documentation, two compressed Docker image
+archives, SPDX SBOMs, exact commits/image IDs/artifact hashes, and a release
+checksum file.
+
+Copy the versioned release directory to a low-power Unraid server, then run
+these commands from that directory:
 
 ```bash
-mkdir opensagetv-vibe && cd opensagetv-vibe
-git clone https://github.com/opensagetv-vibe/opensagetv-vibe-build-env.git
-./opensagetv-vibe-build-env/checkout-all.sh
+sha256sum -c SHA256SUMS
+gzip -dc images/opensagetv-vibe-server-u26-gpu-j11.tar.gz | docker load
 ```
 
-Both helpers refuse to update a dirty repository. Pass `-SkipArchive` on
-Windows or `--skip-archive` on Linux for a build-only checkout without the
-large historical archive.
+Install the CA XML and commission the clean appdata path documented by the
+container repository. No SageTV settings or appdata are included in the build
+or release bundle.
 
-`all` builds the image automatically only when it is missing. Use `image`
-explicitly after changing the Dockerfile; the next command recreates the one
-named container against the new image. Normal source edits are visible
-immediately through the bind mounts.
-
-The `image` command uses BuildKit stages inside this repository. FFmpeg source
-is fetched at pinned commit
-`bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa` (`n9.0.1`) using BuildKit's
-tag-plus-checksum context validation, and the BtbN base/Linux/Windows images are pinned by digest in the
-Dockerfile. A local source context can be supplied with
-`OPENSAGETV_VIBE_FFMPEG_SOURCE_CONTEXT` for an offline rebuild.
-
-Low-power Unraid servers should load artifacts/images built on a faster amd64
-Docker host. The development container contains no SageTV appdata and does not
-replace the separately commissioned runtime container.
+MIM is included but remains `MIM_ENABLED=false` until the separate Android
+MiniClient and physical AMD/NVIDIA release gates pass. Hardware decode defaults
+to enabled and falls back to software when device initialization is unavailable.

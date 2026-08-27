@@ -1,33 +1,74 @@
 # OpenSageTV Vibe build-environment handoff
 
-The unified image is `opensagetv-vibe-build-env:u26-j11`. Its Dockerfile owns
-the internal BtbN Linux/Windows FFmpeg toolchain stages and adds the complete
-SageTV Core toolchain plus Java 11. No separately tagged SageTV FFmpeg builder
-image is part of the supported workflow. `opensagetv-vibe-dev.sh all` is
-canonical. This repository owns build-environment orchestration and the
-compatibility manifest, not product source or appdata.
+## Current state
 
-Both host wrappers reuse the single `opensagetv-vibe-dev` container. Do not add
-phase-specific `docker run --name` calls. Source is bind-mounted, so compile and
-test by `docker exec` in this container. Rebuild with `image` only after build
-dependencies change; the wrapper detects the image ID and replaces the same
-container. `opensagetv-vibe-gradle-cache` is the one intentional project build-cache
-volume. Temporary runtime tests must use `--rm` or explicit `docker rm -v`
-because the production image declares five data volumes.
+The unified build/release workflow is operational. On 2026-08-27 the Windows
+Docker Desktop wrapper completed `all` with `BUILD PASSED` from the one reusable
+`opensagetv-vibe-dev` container.
 
-The image wrapper resolves FFmpeg `n9.0.1` to pinned commit
-`bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa` and supplies it to BuildKit as a
-tag-plus-checksum named context. BtbN stage images are pinned by digest. After a successful
-explicit image rebuild the wrapper removes the obsolete standalone builder tag
-if it exists.
+Passed stages:
 
-MIM 0.4.5's complete non-Android gate now runs from both `test-mim` and `all`:
-init/rollback, option/control forwarding, teardown/crash containment, and real
-completed/growing/join/repeated media integrity. The consolidated image was
-rebuilt on 2026-08-27 and its clean `all` run returned `BUILD PASSED` for Core,
-Linux and Windows FFmpeg/MIM, MIM tests, and XMLTV. `ffmpeg-info`, static
-validation, and the FFmpeg compatibility launcher passed; Docker retained only
-the public unified build image and one reusable development container. Android
-MiniClient commissioning and physical AMD/NVIDIA testing remain release gates,
-so `all` builds the experimental artifacts but never enables MIM in runtime. No
-release has been published.
+- Clean Core Java, native, server, ELF/JNI, system-libpng, malformed-PNG,
+  startup, and shutdown tests.
+- FFmpeg 9.0.1/MIM 0.4.5 Linux and Windows builds.
+- Completed/growing/join/repeated-switch MIM A/V and teardown tests.
+- XMLTV 3.5 build and complete regression suite.
+- Exact runtime artifact staging.
+- Ubuntu 26.04/OpenJDK 11 production and debug runtime image builds.
+- Clean runtime health, real UDP discovery response, TCP 42024 connection,
+  XMLTV no-license auto-selection, OpenDCT V3 mock-wire behavior, and cleanup.
+- Exact manifest, SHA-256 sets, three SPDX 2.3 SBOMs, compressed image exports,
+  and versioned `.tar.zst` release bundle.
+
+The live physical OpenDCT/HDHomeRun scan was `SKIPPED` because this workstation
+had no commissioned endpoint. The harness accepts explicit endpoint variables
+and must be rerun on the target network. Android MiniClient and physical
+AMD/NVIDIA commissioning remain product release gates, not build-environment
+failures. MIM therefore remains disabled by default.
+
+## Architecture invariants
+
+- Development image: `opensagetv-vibe-build-env:u26-j11`.
+- Reusable development container: `opensagetv-vibe-dev`.
+- Intentional cache volume: `opensagetv-vibe-gradle-cache`.
+- Runtime images are outputs, not development environments.
+- FFmpeg Linux/Windows toolchains are private Docker stages owned here.
+- No phase-specific build containers or separately managed FFmpeg builder image.
+- Every component source and final output directory is bind-mounted.
+- Runtime tests may create only labeled, temporary resources and must clean them
+  even on error.
+
+The Docker socket is deliberately mounted so the same development container can
+build and run the server images. This is a privileged trust boundary and must
+remain documented.
+
+## Reproduction
+
+Run `opensagetv-vibe-dev.ps1 all` on Windows Docker Desktop or
+`opensagetv-vibe-dev.sh all` on Linux. `image` is needed only when the unified
+Dockerfile/build dependencies change. `runtime-all` is the quick post-component
+path for artifact staging, runtime image/test, and release regeneration.
+
+The authoritative results are:
+
+```text
+output/BUILD_REPORT.md
+output/CORE_BUILD_REPORT.md
+output/releases/opensagetv-vibe-9.2.10-u26-j11/RELEASE_REPORT.md
+output/releases/opensagetv-vibe-9.2.10-u26-j11/release-manifest.json
+output/releases/opensagetv-vibe-9.2.10-u26-j11/SHA256SUMS
+```
+
+Do not hand-edit the resolved JSON manifest or SBOMs. Regenerate them with
+`release` after any artifact, image, documentation, or source-revision change.
+
+## Next commissioning work
+
+The remaining target-hardware work is tracked in the workspace `task.md`:
+physical host and `br0` discovery, a real OpenDCT/HDHomeRun scan, Intel/AMD/
+NVIDIA device tests, Android MiniClient live playback, and a clean Unraid
+commissioning/reload of the exact exported image. Keep MIM disabled until those
+independent gates pass.
+
+No repository or release has been pushed. Publication remains explicitly out of
+scope until approved by the repository owner.
