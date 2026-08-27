@@ -46,6 +46,13 @@ Both wrappers support:
 | `remove-dev` | Remove only the reusable development container |
 | `image` | Rebuild the image after Dockerfile/dependency changes |
 
+`test-mim` runs both deterministic process/control regressions and real
+FFmpeg media checks. The latter generate 29.97 and 59.94 fps MPEG-TS fixtures,
+exercise completed and growing/join-in-progress inputs, repeat startup and
+teardown, verify audio/video timing and packet counts, fully decode every
+result, and reject orphan processes. Results are saved at
+`opensagetv-ffmpeg-mim/output/test-results/non-android-suite.log`.
+
 `all` builds the image automatically only when it is missing. Use `image`
 explicitly after changing the Dockerfile; the next command recreates the one
 named container against the new image. Normal source edits are visible

@@ -8,11 +8,20 @@ ffmpeg_target() {
   source "$target/env.sh"; export PATH="/opt/ct-ng/bin:$PATH" PKG_CONFIG_LIBDIR=/opt/ffbuild/lib/pkgconfig:/opt/ffbuild/share/pkgconfig
   cd "$fm"; bash code/docker/build_target_unified.sh "$id"
 }
+run_mim_suite() {
+  cd "$fm"
+  mkdir -p output/test-results
+  {
+    bash code/mim/tests/run_init_tests.sh
+    bash code/mim/tests/run_mim_tests.sh
+    bash code/mim/tests/run_media_tests.sh
+  } | tee output/test-results/non-android-suite.log
+}
 case "$cmd" in
   core) cd "$core"; exec bash tests/linux-modern/all.sh "$@" ;;
   ffmpeg-linux) ffmpeg_target linux-x64 linux64 ;;
   ffmpeg-windows) ffmpeg_target windows-x64 win64 ;;
-  test-mim) cd "$fm"; bash code/mim/tests/run_init_tests.sh; exec bash code/mim/tests/run_mim_tests.sh ;;
+  test-mim) run_mim_suite ;;
   xmltv) cd "$xmltv"; exec bash scripts/build.sh ;;
   clean)
     cd "$core"; bash tests/linux-modern/clean.sh
@@ -27,7 +36,7 @@ case "$cmd" in
     cd "$core"; bash tests/linux-modern/all.sh
     ffmpeg_target linux-x64 linux64
     ffmpeg_target windows-x64 win64
-    cd "$fm"; bash code/mim/tests/run_init_tests.sh; bash code/mim/tests/run_mim_tests.sh
+    run_mim_suite
     cd "$xmltv"; bash scripts/build.sh
     cp "$core/output/BUILD_REPORT.md" "$manifest/output/CORE_BUILD_REPORT.md"
     {
@@ -42,6 +51,7 @@ case "$cmd" in
       echo '| FFmpeg/MIM Linux x64 | PASS |'
       echo '| FFmpeg/MIM Windows x64 | PASS |'
       echo '| MIM init/control/teardown/containment | PASS |'
+      echo '| MIM completed/growing/join/repeated media integrity | PASS |'
       echo '| XMLTV compile/tests/package | PASS |'
     } > "$report"
     trap - ERR

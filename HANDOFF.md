@@ -10,4 +10,9 @@ container. `opensagetv-gradle-cache` is the one intentional project build-cache
 volume. Temporary runtime tests must use `--rm` or explicit `docker rm -v`
 because the production image declares five data volumes.
 
-MIM's control test remains a release gate; `all` builds its experimental artifacts but never enables them in runtime. No release has been published.
+MIM 0.4.5's complete non-Android gate now runs from both `test-mim` and `all`:
+init/rollback, option/control forwarding, teardown/crash containment, and real
+completed/growing/join/repeated media integrity. The 2026-08-26 clean `all` run
+returned `BUILD PASSED`. Android MiniClient commissioning and physical
+AMD/NVIDIA testing remain release gates, so `all` builds the experimental
+artifacts but never enables MIM in runtime. No release has been published.
