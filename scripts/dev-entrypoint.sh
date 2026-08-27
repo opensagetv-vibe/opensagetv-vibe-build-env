@@ -195,7 +195,7 @@ case "$cmd" in
     run_stage 'XMLTV compile, regression tests, and package' bash -c "cd '$xmltv' && bash scripts/build.sh"
     run_stage 'Runtime artifact staging and integrity' runtime_stage
     run_stage 'Production and debug runtime image builds' runtime_images
-    run_stage 'Clean runtime, health, discovery, XMLTV, OpenDCT, and cleanup validation' runtime_test
+    run_stage 'Clean runtime, restart soak, discovery, XMLTV, OpenDCT, and cleanup validation' runtime_test
     run_stage 'Manifest, checksums, SPDX SBOMs, release bundle, and offline exports' release_package
     cp "$core/output/BUILD_REPORT.md" "$manifest/output/CORE_BUILD_REPORT.md"
     write_report 'BUILD PASSED'

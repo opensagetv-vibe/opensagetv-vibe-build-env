@@ -56,8 +56,9 @@ source edits do not require an image rebuild.
 5. XMLTV compilation and all importer regression tests.
 6. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
 7. Linux/amd64 production and debug runtime image builds.
-8. Clean-appdata health, SageTV UDP discovery, TCP service, XMLTV selection,
-   OpenDCT protocol, and resource-cleanup validation.
+8. Clean-appdata health, supervised JVM recovery, repeated container restart
+   soak, SageTV UDP discovery, TCP service, XMLTV selection, OpenDCT protocol,
+   lifecycle metrics, and resource-cleanup validation.
 9. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
    compressed Docker exports, and the versioned release bundle.
 
@@ -79,7 +80,7 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 | `xmltv` | Build and test only the XMLTV importer JAR |
 | `runtime-stage` | Validate and stage already-built runtime artifacts |
 | `runtime-images` | Build production and debug runtime images |
-| `runtime-test` | Start a clean runtime and test health/network/plugin behavior |
+| `runtime-test` | Start a clean runtime and test lifecycle/health/network/plugin behavior |
 | `release` | Reassemble manifests, SBOMs, checksums, image exports, and bundle |
 | `runtime-all` | Run staging, runtime image, runtime test, and release stages |
 | `shell` | Enter the same reusable development container |
@@ -89,6 +90,23 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 The container mounts the Docker socket to build and validate runtime images.
 That socket grants the development container control of the host Docker daemon;
 use this workflow only with trusted source.
+
+## Runtime restart soak
+
+`runtime-test`, `runtime-all`, and `all` use the same temporary SageTV
+container for one supervisor-controlled JVM recovery and three full container
+restarts. Each pass requires TCP readiness, healthy state, Tini PID 1, zero
+zombies, a live Java PID file, and bounded descriptor, thread, and RSS growth.
+To run more cycles from Windows:
+
+```powershell
+$env:OPENSAGETV_VIBE_RESTART_CYCLES='10'
+.\opensagetv-vibe-dev.ps1 runtime-test
+```
+
+The Linux wrapper accepts the same environment variable. Values below two are
+rejected. Advanced timeout and metric-growth limits are documented in
+`opensagetv-vibe-container/tests/runtime-restart-soak.sh`.
 
 ## Optional commissioned OpenDCT scan
 

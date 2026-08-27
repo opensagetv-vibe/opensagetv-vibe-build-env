@@ -33,6 +33,10 @@ cd opensagetv-vibe-build-env
 Java build products are not reused. It then compiles both FFmpeg targets and
 XMLTV, stages only verified artifacts, builds both runtime targets, starts a
 clean server, runs networking/integration tests, and packages the release.
+Runtime integration includes one supervisor-controlled JVM recovery and three
+complete container restarts with health, Tini, zombie, descriptor, thread, and
+RSS checks. Set `OPENSAGETV_VIBE_RESTART_CYCLES` to at least two before
+`runtime-test` or `all` to change the cycle count.
 
 To explicitly remove every generated component and release output first:
 
@@ -87,9 +91,10 @@ the Docker context is changed.
 ## Commissioned OpenDCT test
 
 Set `OPENDCT_TEST_HOST`, `OPENDCT_TEST_PORT`, and `OPENDCT_TEST_ENCODER` before
-`runtime-test` or `all`. The host wrappers forward only these test variables and
-the supported release/image overrides. Without all three, the physical scan is
-reported as `SKIPPED`; the deterministic mock-protocol test still runs.
+`runtime-test` or `all`. The host wrappers forward these settings, the restart
+soak settings, and the supported release/image overrides. Without all three
+OpenDCT settings, the physical scan is reported as `SKIPPED`; the deterministic
+mock-protocol test still runs.
 
 ## Release integrity
 

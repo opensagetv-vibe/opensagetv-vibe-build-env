@@ -15,8 +15,10 @@ Passed stages:
 - XMLTV 3.5 build and complete regression suite.
 - Exact runtime artifact staging.
 - Ubuntu 26.04/OpenJDK 11 production and debug runtime image builds.
-- Clean runtime health, real UDP discovery response, TCP 42024 connection,
-  XMLTV no-license auto-selection, OpenDCT V3 mock-wire behavior, and cleanup.
+- Clean runtime health, one supervised JVM recovery, three complete container
+  restart cycles, zero zombies, bounded descriptor/thread/RSS metrics, real UDP
+  discovery response, TCP 42024 connection, XMLTV no-license auto-selection,
+  OpenDCT V3 mock-wire behavior, and cleanup.
 - Exact manifest, SHA-256 sets, three SPDX 2.3 SBOMs, compressed image exports,
   and versioned `.tar.zst` release bundle.
 
