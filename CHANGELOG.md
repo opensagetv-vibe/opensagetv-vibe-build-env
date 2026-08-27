@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Made release dirty-state detection compare staged/tracked content while
+  normalizing only checkout CRLF differences. This prevents inherited
+  `.gitattributes` and Windows bind mounts from falsely marking clean source
+  commits dirty without hiding actual content, staging, deletion, or untracked
+  changes.
 - Integrated `opensagetv-vibe-container` into the same reusable development
   container and mounted the host Docker socket for runtime image construction,
   server startup, network tests, and image export.

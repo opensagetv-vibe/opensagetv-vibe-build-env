@@ -4,7 +4,9 @@
 import argparse
 import hashlib
 import json
+import os
 import pathlib
+import stat
 import subprocess
 
 
@@ -29,6 +31,63 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def normalized_checkout_bytes(data):
+    """Ignore only host checkout CRLF conversion when testing source dirt."""
+    return data.replace(b"\r\n", b"\n")
+
+
+def repository_is_dirty(path):
+    """Report semantic Git changes without Windows/Linux EOL false positives."""
+    status_output = subprocess.check_output(
+        ["git", "-C", str(path), "status", "--porcelain=v1", "-z"]
+    )
+    for record in status_output.split(b"\0"):
+        if not record:
+            continue
+        index_state = chr(record[0])
+        worktree_state = chr(record[1])
+        if index_state != " ":
+            return True
+        if worktree_state == " ":
+            continue
+        if worktree_state != "M":
+            return True
+
+        relative = os.fsdecode(record[3:])
+        index_entry = subprocess.check_output(
+            ["git", "-C", str(path), "ls-files", "-s", "--", relative],
+            text=True,
+        ).strip()
+        if not index_entry:
+            return True
+        mode, object_id, _stage_and_path = index_entry.split(maxsplit=2)
+        if mode == "160000":
+            return True
+
+        index_bytes = subprocess.check_output(
+            ["git", "-C", str(path), "cat-file", "blob", object_id]
+        )
+        worktree_path = path / relative
+        if mode == "120000":
+            worktree_bytes = os.readlink(worktree_path).encode()
+        else:
+            worktree_bytes = worktree_path.read_bytes()
+        if normalized_checkout_bytes(index_bytes) != normalized_checkout_bytes(worktree_bytes):
+            return True
+
+        filemode = subprocess.run(
+            ["git", "-C", str(path), "config", "--bool", "core.filemode"],
+            check=False,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        if filemode == "true" and mode in {"100644", "100755"}:
+            worktree_executable = bool(worktree_path.stat().st_mode & stat.S_IXUSR)
+            if worktree_executable != (mode == "100755"):
+                return True
+    return False
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--release-id", required=True)
@@ -46,7 +105,7 @@ def main():
         repositories[name] = {
             "repository": SOURCES[name],
             "commit": command("git", "-C", str(path), "rev-parse", "HEAD"),
-            "dirty": bool(command("git", "-C", str(path), "status", "--porcelain")),
+            "dirty": repository_is_dirty(path),
         }
 
     def image_record(reference):

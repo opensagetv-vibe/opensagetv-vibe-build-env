@@ -104,7 +104,8 @@ sha256sum -c SHA256SUMS
 ```
 
 The resolved JSON manifest is generated, not hand-maintained. It records each
-component commit and dirty state, image ID/size/platform, release policy, and
+component commit and semantic dirty state (host-only CRLF checkout conversion
+is ignored), image ID/size/platform, release policy, and
 the size and SHA-256 of every packaged artifact. Three SPDX 2.3 JSON documents
 cover release files and the installed Debian packages in both runtime images.
 
