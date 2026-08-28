@@ -6,22 +6,29 @@ core="${CORE_SOURCE:-/work/sagetv}"
 fm="${MIM_SOURCE:-/project}"
 xmltv="${XMLTV_SOURCE:-/workspace/xmltv-import}"
 container="${CONTAINER_SOURCE:-/workspace/container}"
+android="${ANDROID_SOURCE:-/workspace/android-client}"
 release_id="${OPENSAGETV_VIBE_RELEASE_ID:-opensagetv-vibe-9.2.10-u26-j11}"
 production_image="${OPENSAGETV_VIBE_SERVER_IMAGE:-ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11}"
 debug_image="${OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE:-ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11-debug}"
+build_image="${OPENSAGETV_VIBE_BUILD_IMAGE:-opensagetv-vibe-build-env:u26-j11}"
 output="$manifest_root/output"
 release_dir="$output/releases/$release_id"
 package_dir="$output/packages"
 bundle="$package_dir/$release_id.tar.zst"
 opendct_status="$output/test-results/opendct-live.status"
 runtime_validation_log="$output/test-results/runtime-validation.log"
+android_test_log="$output/test-results/android-client.log"
 
 test -s "$core/output/packages/sagetv-server-x86_64.tar.gz"
 test -s "$fm/output/linux-x64/ffmpeg_MIM"
 test -s "$fm/output/windows-x64/SageTVTranscoder.exe"
 test -s "$xmltv/output/packages/XMLTVImportPlugin.jar"
+test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk"
+test -s "$android/VERSION"
 test -s "$opendct_status"
 test -s "$runtime_validation_log"
+test -s "$android_test_log"
+grep -q '^ANDROID CLIENT SUITE PASSED$' "$android_test_log"
 restart_cycles="$(sed -n 's/^RUNTIME RESTART SOAK PASSED: supervisor restart + \([0-9][0-9]*\) container restarts$/\1/p' "$runtime_validation_log" | tail -1)"
 [[ "$restart_cycles" =~ ^[0-9]+$ ]] || {
   echo "ERROR: runtime restart soak PASS marker is missing" >&2
@@ -29,6 +36,7 @@ restart_cycles="$(sed -n 's/^RUNTIME RESTART SOAK PASSED: supervisor restart + \
 }
 docker image inspect "$production_image" >/dev/null
 docker image inspect "$debug_image" >/dev/null
+docker image inspect "$build_image" >/dev/null
 
 rm -rf "$release_dir"
 mkdir -p \
@@ -36,9 +44,10 @@ mkdir -p \
   "$release_dir/components/ffmpeg-mim/linux-x64" \
   "$release_dir/components/ffmpeg-mim/windows-x64" \
   "$release_dir/components/xmltv" \
+  "$release_dir/components/android-client" \
   "$release_dir/images" "$release_dir/sbom" \
   "$release_dir/test-results" \
-  "$release_dir/docs/build-env" "$release_dir/docs/container" \
+  "$release_dir/docs/build-env" "$release_dir/docs/container" "$release_dir/docs/android-client" \
   "$package_dir"
 
 cp "$core/output/packages/sagetv-server-x86_64.tar.gz" "$release_dir/components/core/"
@@ -48,13 +57,20 @@ cp -a "$fm/output/windows-x64/." "$release_dir/components/ffmpeg-mim/windows-x64
 cp "$xmltv/output/packages/XMLTVImportPlugin.jar" "$release_dir/components/xmltv/"
 cp -a "$xmltv/output/config-examples" "$release_dir/components/xmltv/"
 cp -a "$xmltv/output/test-results" "$release_dir/components/xmltv/"
+cp "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk" \
+  "$release_dir/components/android-client/"
+cp "$android/VERSION" "$release_dir/components/android-client/VERSION"
 cp "$runtime_validation_log" "$release_dir/test-results/runtime-validation.log"
+cp "$android_test_log" "$release_dir/test-results/android-client.log"
 cp "$container/unRAID/opensagetv-vibe/sagetv-vibe-server-u26-gpu-j11.xml" "$release_dir/"
 cp "$container/README.md" "$container/HANDOFF.md" "$container/CHANGELOG.md" \
   "$release_dir/docs/container/"
 cp "$manifest_root/README.md" "$manifest_root/BUILDING.md" \
   "$manifest_root/HANDOFF.md" "$manifest_root/CHANGELOG.md" \
   "$release_dir/docs/build-env/"
+cp "$android/README.md" "$android/HANDOFF.md" "$android/CHANGELOG.md" \
+  "$android/MIGRATION_TO_OPENSAGETV_VIBE.md" \
+  "$release_dir/docs/android-client/"
 
 production_archive="$release_dir/images/opensagetv-vibe-server-u26-gpu-j11.tar.gz"
 debug_archive="$release_dir/images/opensagetv-vibe-server-u26-gpu-j11-debug.tar.gz"
@@ -87,13 +103,17 @@ python3 "$manifest_root/scripts/generate-sbom.py" \
 python3 "$manifest_root/scripts/generate-release-manifest.py" \
   --release-id "$release_id" --release-dir "$release_dir" \
   --production-image "$production_image" --debug-image "$debug_image" \
+  --build-image "$build_image" \
   --repo build_env "$manifest_root" \
   --repo core "$core" \
   --repo container "$container" \
   --repo ffmpeg_mim "$fm" \
   --repo xmltv_import "$xmltv" \
+  --repo android_client "$android" \
   --opendct-status "$opendct_status" \
   --runtime-validation-log "$runtime_validation_log" \
+  --android-test-log "$android_test_log" \
+  --android-version-file "$android/VERSION" \
   --output "$release_dir/release-manifest.json"
 
 cat > "$release_dir/RELEASE_REPORT.md" <<EOF
@@ -103,6 +123,7 @@ cat > "$release_dir/RELEASE_REPORT.md" <<EOF
 - Platform: linux/amd64
 - Production image: $production_image ($production_id)
 - Debug image: $debug_image ($debug_id)
+- Development image: $build_image ($(docker image inspect "$build_image" --format '{{.Id}}'))
 - MIM default: disabled
 - Hardware decode default: enabled
 - OpenDCT live channel scan: $(cat "$opendct_status")
@@ -110,7 +131,9 @@ cat > "$release_dir/RELEASE_REPORT.md" <<EOF
 
 | Release stage | Result |
 |---|---|
-| Core, FFmpeg/MIM, and XMLTV artifact staging | PASS |
+| Core, FFmpeg/MIM, XMLTV, and Android artifact staging | PASS |
+| Android unit/static tests, validation, and debug APK build | PASS |
+| Android device commissioning | SKIPPED - not part of headless unified all |
 | Production image export | PASS |
 | Debug image export | PASS |
 | SPDX artifact SBOM | PASS |

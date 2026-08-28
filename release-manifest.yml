@@ -8,18 +8,24 @@ versions:
   sagetv: "9.2.10"
   ffmpeg_mim: "0.4.5"
   xmltv_import: "3.5"
+  android_client: "0.5.75"
 toolchains:
   ffmpeg_tag: "n9.0.1"
   ffmpeg_commit: "bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa"
   btbn_base: "ghcr.io/btbn/ffmpeg-builds/base@sha256:1add1617fb7b9e661b34632b9bdc468e80c8b8ea517a6fa51d1a90634ea69112"
   btbn_linux_x64: "ghcr.io/btbn/ffmpeg-builds/linux64-gpl-9.0@sha256:69ce235cb2437154c54db6bee4b6b8c38290a19b6daca90b5ae769896f018761"
   btbn_windows_x64: "ghcr.io/btbn/ffmpeg-builds/win64-gpl-9.0@sha256:2171aae9e82c7543a05d9f5f7674ebab3815168e2afa430c0dc7d3a5f877299a"
+  android_jdk17: "eclipse-temurin:17-jdk-jammy@sha256:400014962ad7224461f945bb1cc3d7d5a1927ce15b8245b72d9cedcda554cd2a"
+  android_legacy_jdk8: "eclipse-temurin:8-jdk-jammy@sha256:7cb1137d4a02aeb7ca85faae69c5f0720703936cbfb0b4af21067c73174f9b5e"
+  android_command_line_tools_sha256: "4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583"
+  android_sdk: "platforms 29/36; build-tools 29.0.2/36.0.0; NDK 21.0.6113669"
 components:
   build_env: "https://github.com/opensagetv-vibe/opensagetv-vibe-build-env.git"
   core: "https://github.com/opensagetv-vibe/opensagetv-vibe-core.git"
   container: "https://github.com/opensagetv-vibe/opensagetv-vibe-container.git"
   ffmpeg_mim: "https://github.com/opensagetv-vibe/opensagetv-vibe-ffmpeg-mim.git"
   xmltv_import: "https://github.com/opensagetv-vibe/opensagetv-vibe-xmltv-import.git"
+  android_client: "https://github.com/opensagetv-vibe/opensagetv-vibe-android-client.git"
 resolved_manifest: "output/releases/opensagetv-vibe-9.2.10-u26-j11/release-manifest.json"
 images:
   production: "ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11"
@@ -30,4 +36,5 @@ policy:
   runtime_downloads_latest: false
   standalone_ffmpeg_builder_image: false
   exact_commits_and_hashes_resolved_at_build: true
+  android_device_tests_in_default_all: false
   require_clean_release_checkout: false

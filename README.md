@@ -4,7 +4,9 @@ This repository is the single build, test, runtime-validation, and local-release
 interface for OpenSageTV Vibe. One Ubuntu 26.04/OpenJDK 11 development image and
 one reusable container build all supported component artifacts, construct the
 production and debug server images, start a clean SageTV server, test it, and
-assemble offline release media.
+assemble offline release media. The same image also carries explicitly selected
+JDK 17/JDK 8 and Android SDK tooling for the Android MiniClient; Java 11 remains
+the global/default SageTV server toolchain.
 
 The public development image is `opensagetv-vibe-build-env:u26-j11`; the only
 reusable development container is `opensagetv-vibe-dev`. Linux and Windows
@@ -21,6 +23,7 @@ opensagetv-vibe-container/
 opensagetv-vibe-core/
 opensagetv-vibe-ffmpeg-mim/
 opensagetv-vibe-xmltv-import/
+opensagetv-vibe-android-client/
 ```
 
 `checkout-all.ps1` and `checkout-all.sh` create this layout. Pass
@@ -73,12 +76,14 @@ source edits do not require an image rebuild.
 4. MIM lifecycle, growing-file, join-in-progress, A/V integrity, and teardown
    tests.
 5. XMLTV compilation and all importer regression tests.
-6. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
-7. Linux/amd64 production and debug runtime image builds.
-8. Clean-appdata health, supervised JVM recovery, repeated container restart
+6. Android client unit/static and MCP tests, source validation, and a clean
+   deterministic debug APK build under JDK 17. Device operations are excluded.
+7. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
+8. Linux/amd64 production and debug runtime image builds.
+9. Clean-appdata health, supervised JVM recovery, repeated container restart
    soak, SageTV UDP discovery, TCP service, XMLTV selection, OpenDCT protocol,
    lifecycle metrics, and resource-cleanup validation.
-9. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
+10. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
    compressed Docker exports, and the versioned release bundle.
 
 Any failed stage writes `BUILD FAILED`, records the failed stage in
@@ -97,6 +102,11 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 | `ffmpeg-info` | Validate both toolchains, Docker access, and container source mount |
 | `test-mim` | Run all non-Android MIM lifecycle and real-media tests |
 | `xmltv` | Build and test only the XMLTV importer JAR |
+| `android-info` | Prove Java isolation plus installed Android SDK/NDK/ADB/MCP versions |
+| `android-test`, `android-validate` | Run Android host/static tests or source validation |
+| `android-build` | Clean-build the Dev APK with JDK 17 |
+| `android-all` | Run tests, validation, and deterministic APK build together |
+| `android-mcp` | Start the Android MCP stdio server; device commissioning remains explicit |
 | `runtime-stage` | Validate and stage already-built runtime artifacts |
 | `runtime-images` | Build production and debug runtime images |
 | `runtime-test` | Start a clean runtime and test lifecycle/health/network/plugin behavior |
@@ -155,7 +165,8 @@ output/packages/opensagetv-vibe-9.2.10-u26-j11.tar.zst
 output/releases/opensagetv-vibe-9.2.10-u26-j11/
 ```
 
-The release directory contains Core, Linux/Windows FFmpeg/MIM, XMLTV, the CA
+The release directory contains Core, Linux/Windows FFmpeg/MIM, XMLTV, the
+Android debug APK and test evidence, the CA
 template, separated build/container documentation, two compressed Docker image
 archives, SPDX SBOMs, exact commits/image IDs/artifact hashes, and a release
 checksum file.

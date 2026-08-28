@@ -7,6 +7,7 @@ core=/work/sagetv
 fm=/project
 xmltv=/workspace/xmltv-import
 container=/workspace/container
+android=/workspace/android-client
 manifest=/workspace/release-manifest
 production_image="${OPENSAGETV_VIBE_SERVER_IMAGE:-ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11}"
 debug_image="${OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE:-ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11-debug}"
@@ -23,9 +24,85 @@ validate_environment() {
   done
   test -s /opt/sagetv/src/ffmpeg/configure
   test -d "$container/modern"
+  test -x /opt/java/jdk17/bin/java
+  test -x /opt/java/jdk8/bin/java
+  test -x /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager
+  test -x /opt/android-sdk/platform-tools/adb
+  for package in \
+    build-tools/29.0.2 build-tools/36.0.0 \
+    platforms/android-29 platforms/android-36 ndk/21.0.6113669; do
+    test -d "/opt/android-sdk/$package"
+  done
+  test -x /opt/opensagetv-vibe/android-python/bin/python3
+  test -f "$android/dev.sh"
+  test -f "$android/docker/entrypoint.sh"
+  test -f "$android/source/dev/gradlew"
   command -v docker >/dev/null
   test -S /var/run/docker.sock
   docker info >/dev/null
+}
+
+android_environment() {
+  env \
+    JAVA_HOME=/opt/java/jdk17 \
+    JDK_HOME=/opt/java/jdk17 \
+    GRADLE_USER_HOME=/work/.gradle/android \
+    ANDROID_USER_HOME="$android/adb" \
+    SAGETV_WORKSPACE="$android" \
+    SAGETV_DEV_SOURCE="$android/source/dev" \
+    SAGETV_EXISTING_SOURCE="$android/source/existing" \
+    SAGETV_MCP_CONFIG="$android/config/firetv.toml" \
+    SAGETV_ARTIFACT_DIR="$android/artifacts/firetv" \
+    PYTHONPATH="$android/mcp/src" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/java/jdk17/bin:/opt/opensagetv-vibe/android-python/bin:$PATH" \
+    "$@"
+}
+
+android_prepare() {
+  android_environment python3 "$android/scripts/repair_dev_gradle.py" --workspace "$android"
+}
+
+android_command() {
+  local action="$1"
+  shift
+  android_environment bash "$android/docker/entrypoint.sh" "$action" "$@"
+}
+
+android_info() {
+  validate_environment
+  echo "default_java=$(java -version 2>&1 | head -1)"
+  echo "android_java=$(/opt/java/jdk17/bin/java -version 2>&1 | head -1)"
+  echo "android_legacy_java=$(/opt/java/jdk8/bin/java -version 2>&1 | head -1)"
+  echo "android_sdk_root=$ANDROID_SDK_ROOT"
+  android_environment /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --list_installed \
+    | grep -E '^(  )?(build-tools;29\.0\.2|build-tools;36\.0\.0|ndk;21\.0\.6113669|platform-tools|platforms;android-(29|36))([[:space:]]|$)'
+  /opt/android-sdk/platform-tools/adb version | head -2
+  android_environment python3 -c 'import importlib.metadata as m; import mcp; print("android_mcp=" + m.version("mcp"))'
+  echo 'android_toolchain=PASS'
+}
+
+run_android_suite() {
+  mkdir -p "$manifest/output/test-results"
+  {
+    android_prepare
+    android_command test
+    android_command validate
+    android_command build
+    test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk"
+    test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk.sha256"
+    echo 'ANDROID CLIENT SUITE PASSED'
+  } | tee "$manifest/output/test-results/android-client.log"
+}
+
+android_clean() {
+  if [[ -x "$android/source/dev/gradlew" ]]; then
+    android_environment bash -c "cd '$android/source/dev' && ./gradlew --no-daemon clean"
+  fi
+  rm -f \
+    "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk" \
+    "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk.sha256"
 }
 
 ffmpeg_target() {
@@ -82,6 +159,7 @@ runtime_test() {
 release_package() {
   env \
     CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" CONTAINER_SOURCE="$container" \
+    ANDROID_SOURCE="$android" \
     OPENSAGETV_VIBE_SERVER_IMAGE="$production_image" \
     OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE="$debug_image" \
     bash "$manifest/scripts/package-release.sh"
@@ -96,9 +174,12 @@ add_result() {
 }
 
 write_report() {
-  local status="$1" rc="${2:-0}" release_path="not assembled" opendct="not run"
+  local status="$1" rc="${2:-0}" release_path="not assembled" opendct="not run" android_apk="not built"
   [[ ! -s "$manifest/output/RELEASE_PATH" ]] || release_path="$(cat "$manifest/output/RELEASE_PATH")"
   [[ ! -s "$manifest/output/test-results/opendct-live.status" ]] || opendct="$(cat "$manifest/output/test-results/opendct-live.status")"
+  if [[ -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk" ]]; then
+    android_apk="$(sha256sum "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk" | cut -d' ' -f1)"
+  fi
   {
     echo '# OpenSageTV Vibe unified build report'
     echo
@@ -109,6 +190,9 @@ write_report() {
     echo "- GCC: $(gcc --version | head -1)"
     echo "- G++: $(g++ --version | head -1)"
     echo "- Java: $(java -version 2>&1 | head -1)"
+    echo "- Android Java: $(/opt/java/jdk17/bin/java -version 2>&1 | head -1)"
+    echo "- Android client: $(cat "$android/VERSION")"
+    echo "- Android APK SHA-256: $android_apk"
     echo "- Docker client: $(docker --version)"
     echo "- Build environment: ${OPENSAGETV_VIBE_BUILD_ENV_VERSION:-unknown}"
     echo "- FFmpeg: ${SAGETV_FFMPEG_TAG:-unknown} (${SAGETV_FFMPEG_COMMIT:-unknown})"
@@ -173,6 +257,12 @@ case "$cmd" in
     ;;
   test-mim) run_mim_suite ;;
   xmltv) cd "$xmltv"; exec bash scripts/build.sh ;;
+  android-info) android_info ;;
+  android-test) android_prepare; android_command test "$@" ;;
+  android-validate) android_prepare; android_command validate "$@" ;;
+  android-build) android_prepare; android_command build "$@" ;;
+  android-all) run_android_suite ;;
+  android-mcp) android_command mcp "$@" ;;
   runtime-stage) runtime_stage ;;
   runtime-images) runtime_images ;;
   runtime-test) runtime_test ;;
@@ -180,6 +270,7 @@ case "$cmd" in
   runtime-all) run_runtime_all ;;
   clean)
     cd "$core"; bash tests/linux-modern/clean.sh
+    android_clean
     rm -rf "$fm/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$container/artifacts"
     echo 'Build outputs cleaned; reusable container, cache, and release images retained'
     ;;
@@ -193,6 +284,7 @@ case "$cmd" in
     run_stage 'FFmpeg/MIM Windows x64 build' ffmpeg_target windows-x64 win64
     run_stage 'MIM lifecycle and media-integrity tests' run_mim_suite
     run_stage 'XMLTV compile, regression tests, and package' bash -c "cd '$xmltv' && bash scripts/build.sh"
+    run_stage 'Android client tests, validation, and deterministic APK build' run_android_suite
     run_stage 'Runtime artifact staging and integrity' runtime_stage
     run_stage 'Production and debug runtime image builds' runtime_images
     run_stage 'Clean runtime, restart soak, discovery, XMLTV, OpenDCT, and cleanup validation' runtime_test
@@ -204,6 +296,6 @@ case "$cmd" in
     ;;
   shell) exec bash "$@" ;;
   help|*)
-    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv runtime-stage runtime-images runtime-test release runtime-all clean shell'
+    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv android-info android-test android-validate android-build android-all android-mcp runtime-stage runtime-images runtime-test release runtime-all clean shell'
     ;;
 esac

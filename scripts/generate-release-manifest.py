@@ -17,11 +17,17 @@ SOURCES = {
     "container": "https://github.com/opensagetv-vibe/opensagetv-vibe-container.git",
     "ffmpeg_mim": "https://github.com/opensagetv-vibe/opensagetv-vibe-ffmpeg-mim.git",
     "xmltv_import": "https://github.com/opensagetv-vibe/opensagetv-vibe-xmltv-import.git",
+    "android_client": "https://github.com/opensagetv-vibe/opensagetv-vibe-android-client.git",
 }
 
 
 def command(*args):
     return subprocess.check_output(args, text=True).strip()
+
+
+def command_output(*args):
+    completed = subprocess.run(args, check=True, capture_output=True, text=True)
+    return (completed.stdout + completed.stderr).strip()
 
 
 def sha256(path):
@@ -95,9 +101,12 @@ def main():
     parser.add_argument("--release-dir", required=True)
     parser.add_argument("--production-image", required=True)
     parser.add_argument("--debug-image", required=True)
+    parser.add_argument("--build-image", required=True)
     parser.add_argument("--repo", action="append", nargs=2, metavar=("NAME", "PATH"), required=True)
     parser.add_argument("--opendct-status", required=True)
     parser.add_argument("--runtime-validation-log", required=True)
+    parser.add_argument("--android-test-log", required=True)
+    parser.add_argument("--android-version-file", required=True)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
@@ -117,6 +126,12 @@ def main():
 
     release_dir = pathlib.Path(args.release_dir)
     runtime_log = pathlib.Path(args.runtime_validation_log).read_text(errors="replace")
+    android_test_log = pathlib.Path(args.android_test_log).read_text(errors="replace")
+    if "ANDROID CLIENT SUITE PASSED" not in android_test_log:
+        raise ValueError("Android client log does not contain the completed suite marker")
+    android_version = pathlib.Path(args.android_version_file).read_text().strip()
+    if not re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}", android_version):
+        raise ValueError(f"invalid Android client version: {android_version!r}")
     restart_match = re.search(
         r"^RUNTIME RESTART SOAK PASSED: supervisor restart \+ (\d+) container restarts$",
         runtime_log,
@@ -140,11 +155,32 @@ def main():
         "platform": "linux/amd64",
         "ubuntu": "26.04",
         "java": "11",
-        "versions": {"sagetv": "9.2.10", "ffmpeg": "n9.0.1", "mim": "0.4.5", "xmltv_import": "3.5"},
+        "versions": {
+            "sagetv": "9.2.10",
+            "ffmpeg": "n9.0.1",
+            "mim": "0.4.5",
+            "xmltv_import": "3.5",
+            "android_client": android_version,
+        },
         "repositories": repositories,
         "images": {
+            "development": image_record(args.build_image),
             "production": image_record(args.production_image),
             "debug": image_record(args.debug_image),
+        },
+        "toolchains": {
+            "build_environment": os.environ.get("OPENSAGETV_VIBE_BUILD_ENV_VERSION", "unknown"),
+            "default_java": command_output("java", "-version").splitlines()[0],
+            "android_java": command_output("/opt/java/jdk17/bin/java", "-version").splitlines()[0],
+            "android_legacy_java": command_output("/opt/java/jdk8/bin/java", "-version").splitlines()[0],
+            "android_sdk": [
+                "platforms;android-29",
+                "build-tools;29.0.2",
+                "platforms;android-36",
+                "build-tools;36.0.0",
+                "ndk;21.0.6113669",
+            ],
+            "android_platform_tools": command_output("adb", "version").splitlines()[1],
         },
         "artifacts": artifacts,
         "tests": {
@@ -155,6 +191,11 @@ def main():
                 "container_restarts": restart_cycles,
                 "zombies": 0,
                 "resource_growth": "bounded",
+            },
+            "android_client": {
+                "result": "PASS",
+                "scope": "unit/static tests, source validation, deterministic debug APK build",
+                "device_tests": "SKIPPED - hardware commissioning is intentionally outside unified all",
             },
             "mim_enabled_by_default": False,
             "hardware_decode_default": True,

@@ -10,7 +10,7 @@ cmd="${1:-help}"
 shift || true
 forwarded_environment=(
   OPENDCT_TEST_HOST OPENDCT_TEST_PORT OPENDCT_TEST_ENCODER
-  OPENSAGETV_VIBE_RELEASE_ID OPENSAGETV_VIBE_SERVER_IMAGE
+  OPENSAGETV_VIBE_RELEASE_ID OPENSAGETV_VIBE_BUILD_IMAGE OPENSAGETV_VIBE_SERVER_IMAGE
   OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE
   OPENSAGETV_VIBE_RESTART_CYCLES OPENSAGETV_VIBE_RESTART_TIMEOUT_SECONDS
   OPENSAGETV_VIBE_STOP_TIMEOUT_SECONDS OPENSAGETV_VIBE_METRIC_SETTLE_SECONDS
@@ -60,6 +60,7 @@ container_ensure() {
       -v "$projects/opensagetv-vibe-ffmpeg-mim:/project" \
       -v "$projects/opensagetv-vibe-xmltv-import:/workspace/xmltv-import" \
       -v "$projects/opensagetv-vibe-container:/workspace/container" \
+      -v "$projects/opensagetv-vibe-android-client:/workspace/android-client" \
       -v "$root:/workspace/release-manifest" \
       -v /var/run/docker.sock:/var/run/docker.sock \
       "$image" infinity >/dev/null
@@ -88,7 +89,7 @@ case "$cmd" in
     ;;
   remove-dev) container_remove ;;
   shell) container_ensure; exec docker exec -it "$container" bash "$@" ;;
-  all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|runtime-stage|runtime-images|runtime-test|release|runtime-all|clean)
+  all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|android-info|android-test|android-validate|android-build|android-all|android-mcp|runtime-stage|runtime-images|runtime-test|release|runtime-all|clean)
     container_ensure
     # Run the bind-mounted controller so orchestration changes do not require
     # rebuilding the dependency image.
@@ -98,11 +99,13 @@ case "$cmd" in
         exec_environment+=(--env "$name=${!name}")
       fi
     done
-    exec docker exec "${exec_environment[@]}" "$container" \
+    interactive=()
+    [[ "$cmd" != android-mcp ]] || interactive=(-i)
+    exec docker exec "${interactive[@]}" "${exec_environment[@]}" "$container" \
       bash /workspace/release-manifest/scripts/dev-entrypoint.sh "$cmd" "$@"
     ;;
   *)
-    echo "Usage: $0 {image|start|stop|remove-dev|all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|runtime-stage|runtime-images|runtime-test|release|runtime-all|clean|shell}" >&2
+    echo "Usage: $0 {image|start|stop|remove-dev|all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|android-info|android-test|android-validate|android-build|android-all|android-mcp|runtime-stage|runtime-images|runtime-test|release|runtime-all|clean|shell}" >&2
     exit 2
     ;;
 esac

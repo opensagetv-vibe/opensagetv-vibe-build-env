@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Integrated `opensagetv-vibe-android-client` into the one Ubuntu 26 unified
+  image and reusable `opensagetv-vibe-dev` container. Java 11 remains the
+  default; Android commands select digest-pinned JDK 17, and the frozen
+  comparison build selects digest-pinned JDK 8 per process.
+- Added checksum-verified Android command-line tools, SDK platforms/build tools
+  29 and 36, NDK 21.0.6113669, ADB, and an isolated pinned Python/MCP virtual
+  environment to the unified image.
+- Added `android-info`, `android-test`, `android-validate`, `android-build`,
+  `android-all`, and `android-mcp` to both host interfaces. Headless Android
+  gates now run inside `all`; device installation and playback remain explicit.
+- Added Android exact commit, version, APK hash/size, test status, documentation,
+  and test log to resolved release provenance and the offline bundle.
+- Extended both checkout helpers to reconstruct the Android sibling repository
+  and detach it at the resolved manifest commit.
+
 - Added an offline/pre-publication mode to both checkout helpers. They can make
   independent `--no-local` sibling clones from a local source root and detach
   the supported repositories at exact commits from a resolved release

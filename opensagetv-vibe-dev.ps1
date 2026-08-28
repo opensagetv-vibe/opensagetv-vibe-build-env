@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('image','start','stop','remove-dev','all','core','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','xmltv','runtime-stage','runtime-images','runtime-test','release','runtime-all','clean','shell')]
+  [ValidateSet('image','start','stop','remove-dev','all','core','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','xmltv','android-info','android-test','android-validate','android-build','android-all','android-mcp','runtime-stage','runtime-images','runtime-test','release','runtime-all','clean','shell')]
   [string]$Command='all'
 )
 
@@ -16,6 +16,7 @@ $forwardedEnvironment = @(
   'OPENDCT_TEST_PORT',
   'OPENDCT_TEST_ENCODER',
   'OPENSAGETV_VIBE_RELEASE_ID',
+  'OPENSAGETV_VIBE_BUILD_IMAGE',
   'OPENSAGETV_VIBE_SERVER_IMAGE',
   'OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE',
   'OPENSAGETV_VIBE_RESTART_CYCLES',
@@ -92,6 +93,7 @@ function Ensure-DevContainer {
       -v "$projects\opensagetv-vibe-ffmpeg-mim:/project" `
       -v "$projects\opensagetv-vibe-xmltv-import:/workspace/xmltv-import" `
       -v "$projects\opensagetv-vibe-container:/workspace/container" `
+      -v "$projects\opensagetv-vibe-android-client:/workspace/android-client" `
       -v "${root}:/workspace/release-manifest" `
       -v '/var/run/docker.sock:/var/run/docker.sock' `
       $image infinity | Out-Null
@@ -145,6 +147,7 @@ switch ($Command) {
     # Run the bind-mounted controller so orchestration changes do not require
     # rebuilding the dependency image.
     $dockerArgs = @('exec')
+    if ($Command -eq 'android-mcp') { $dockerArgs += '-i' }
     foreach ($name in $forwardedEnvironment) {
       $value = [Environment]::GetEnvironmentVariable($name)
       if (-not [string]::IsNullOrEmpty($value)) {

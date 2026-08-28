@@ -6,6 +6,13 @@ The unified build/release workflow is operational. On 2026-08-27 the Windows
 Docker Desktop wrapper completed `all` with `BUILD PASSED` from the one reusable
 `opensagetv-vibe-dev` container.
 
+On 2026-08-28 the Android client was added to that same image/container. Java
+11 remains the default server toolchain, while Android commands select JDK 17
+and the frozen comparison command selects JDK 8 per process. The Android gate
+passed 151 scaffold/static tests, 35 MCP tests, full validation, and a clean
+60-task build. Its APK SHA-256 remained byte-identical to Phase 1:
+`839113f460fed5e6f37ec244ea6a2fbc574c32e5f9b131085c95a349bb364a69`.
+
 Passed stages:
 
 - Clean Core Java, native, server, ELF/JNI, system-libpng, malformed-PNG,
@@ -13,6 +20,7 @@ Passed stages:
 - FFmpeg 9.0.1/MIM 0.4.5 Linux and Windows builds.
 - Completed/growing/join/repeated-switch MIM A/V and teardown tests.
 - XMLTV 3.5 build and complete regression suite.
+- Android v0.5.75 tests, validator, and deterministic Dev APK build.
 - Exact runtime artifact staging.
 - Ubuntu 26.04/OpenJDK 11 production and debug runtime image builds.
 - Clean runtime health, one supervised JVM recovery, three complete container
@@ -39,6 +47,10 @@ failures. MIM therefore remains disabled by default.
 - Intentional cache volume: `opensagetv-vibe-gradle-cache`.
 - Runtime images are outputs, not development environments.
 - FFmpeg Linux/Windows toolchains are private Docker stages owned here.
+- Android SDK 29/36, NDK 21, JDK 17/JDK 8, ADB, and MCP are owned here; they
+  do not change the image-wide Java 11 default.
+- Android source is bind-mounted at `/workspace/android-client`, with its
+  Gradle cache namespaced under the existing shared cache volume.
 - No phase-specific build containers or separately managed FFmpeg builder image.
 - Every component source and final output directory is bind-mounted.
 - Runtime tests may create only labeled, temporary resources and must clean them
@@ -60,6 +72,7 @@ The authoritative results are:
 ```text
 output/BUILD_REPORT.md
 output/CORE_BUILD_REPORT.md
+../opensagetv-vibe-android-client/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk
 output/releases/opensagetv-vibe-9.2.10-u26-j11/RELEASE_REPORT.md
 output/releases/opensagetv-vibe-9.2.10-u26-j11/release-manifest.json
 output/releases/opensagetv-vibe-9.2.10-u26-j11/SHA256SUMS

@@ -3,13 +3,16 @@
 ## Prerequisites
 
 - Docker Desktop on Windows, or Docker Engine on Linux/Unraid.
-- An amd64 host with the five supported repositories checked out as siblings.
+- An amd64 host with the six supported build/release repositories checked out
+  as siblings.
 - Git only when using the checkout helpers. No compiler, Java, Gradle, Python,
   FFmpeg toolchain, or Ubuntu package is installed on the host.
 
 The default development base is `ubuntu:26.04`, the Java baseline is OpenJDK
-11, and the target platform is Linux/amd64. FFmpeg 9.0.1 source and all
-toolchain bases are pinned in the Dockerfile.
+11, and the server target platform is Linux/amd64. FFmpeg 9.0.1 source and all
+toolchain bases are pinned in the Dockerfile. Android commands explicitly use
+the digest-pinned JDK 17 tree; the frozen v0.5.75 comparison build explicitly
+uses JDK 8. Neither changes the image-wide Java 11 default.
 
 For a pre-publication fresh-clone audit, first clone this build-environment
 repository into an empty parent directory. Then run `checkout-all.ps1` with
@@ -39,8 +42,9 @@ cd opensagetv-vibe-build-env
 
 `all` invokes Core's clean script before compilation, so historical native or
 Java build products are not reused. It then compiles both FFmpeg targets and
-XMLTV, stages only verified artifacts, builds both runtime targets, starts a
-clean server, runs networking/integration tests, and packages the release.
+XMLTV and the Android debug client, stages only verified artifacts, builds both
+runtime targets, starts a clean server, runs networking/integration tests, and
+packages the release.
 Runtime integration includes one supervisor-controlled JVM recovery and three
 complete container restarts with health, Tini, zombie, descriptor, thread, and
 RSS checks. Set `OPENSAGETV_VIBE_RESTART_CYCLES` to at least two before
@@ -74,12 +78,26 @@ Inside that shell the component roots are:
 /project                     FFmpeg/MIM
 /workspace/xmltv-import      XMLTV importer
 /workspace/container         runtime/Unraid image
+/workspace/android-client    Android client, MCP, tests, and APK output
 /workspace/release-manifest  unified controller and final output
 ```
 
 The host Docker socket is mounted at `/var/run/docker.sock`. Production and
 debug images are therefore built and tested from this same development
 container while Docker Engine remains the host daemon.
+
+Android-only headless iteration uses the same container:
+
+```powershell
+.\opensagetv-vibe-dev.ps1 android-info
+.\opensagetv-vibe-dev.ps1 android-test
+.\opensagetv-vibe-dev.ps1 android-validate
+.\opensagetv-vibe-dev.ps1 android-build
+```
+
+Use `android-all` for those three gates together. `android-mcp` is an explicit
+stdio/device operation and is not part of `all`; install, launch, and playback
+commissioning must target only the protected Dev application identity.
 
 ## Runtime-only iteration
 
