@@ -2,15 +2,16 @@
 
 ## Current state
 
-The unified build/release workflow is operational. On 2026-08-27 the Windows
-Docker Desktop wrapper completed `all` with `BUILD PASSED` from the one reusable
-`opensagetv-vibe-dev` container.
+The unified build/release workflow is operational. On 2026-08-28 the Windows
+Docker Desktop wrapper completed the full post-Android-integration `all`
+pipeline with `BUILD PASSED` from the one reusable `opensagetv-vibe-dev`
+container. The validated development image is
+`sha256:327a6bc70b719e9111143b5cd3c8af8314aa9a71dc2b6cf3fe0ad9ed4e1b9983`.
 
-On 2026-08-28 the Android client was added to that same image/container. Java
-11 remains the default server toolchain, while Android commands select JDK 17
-and the frozen comparison command selects JDK 8 per process. The Android gate
-passed 151 scaffold/static tests, 35 MCP tests, full validation, and a clean
-60-task build. Its APK SHA-256 remained byte-identical to Phase 1:
+Java 11 remains the default server toolchain, while Android commands select
+JDK 17 and the frozen comparison command selects JDK 8 per process. The
+Android gate passed 151 scaffold/static tests, 35 MCP tests, full validation,
+and a clean 60-task build. Its APK SHA-256 remained byte-identical to Phase 1:
 `839113f460fed5e6f37ec244ea6a2fbc574c32e5f9b131085c95a349bb364a69`.
 
 Passed stages:

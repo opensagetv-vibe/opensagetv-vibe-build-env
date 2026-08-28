@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Verified the complete post-integration Windows Docker Desktop `all` pipeline
+  on 2026-08-28. Core, Linux/Windows FFmpeg/MIM, MIM media integrity, XMLTV,
+  Android tests/validation/APK, production/debug images, runtime discovery and
+  restart soak, exact manifests, checksums, SPDX SBOMs, and offline exports all
+  passed in `opensagetv-vibe-dev`. The physical OpenDCT scan and Android-device
+  commissioning remain explicit hardware gates.
 - Integrated `opensagetv-vibe-android-client` into the one Ubuntu 26 unified
   image and reusable `opensagetv-vibe-dev` container. Java 11 remains the
   default; Android commands select digest-pinned JDK 17, and the frozen
