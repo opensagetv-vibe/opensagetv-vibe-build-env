@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Docker Desktop on Windows, or Docker Engine on Linux/Unraid.
-- An amd64 host with the six supported build/release repositories checked out
+- An amd64 host with the eight supported build/release repositories checked out
   as siblings.
 - Git only when using the checkout helpers. No compiler, Java, Gradle, Python,
   FFmpeg toolchain, or Ubuntu package is installed on the host.
@@ -58,7 +58,8 @@ To explicitly remove every generated component and release output first:
 ```
 
 `clean` does not remove the reusable development container, its Gradle download
-cache, or the two last known runtime images. Runtime validation uses uniquely
+cache, the FFmpeg/MIM compiler cache, or the two canonical runtime images.
+Runtime validation uses uniquely
 labeled temporary containers, networks, and volumes and verifies they are gone
 when the test exits.
 
@@ -78,6 +79,7 @@ Inside that shell the component roots are:
 /project                     FFmpeg/MIM
 /workspace/xmltv-import      XMLTV importer
 /workspace/container         runtime/Unraid image
+/workspace/logo              canonical artwork generator and build output
 /workspace/android-client    Android client, MCP, tests, and APK output
 /workspace/release-manifest  unified controller and final output
 ```
@@ -94,6 +96,10 @@ Android-only headless iteration uses the same container:
 .\opensagetv-vibe-dev.ps1 android-validate
 .\opensagetv-vibe-dev.ps1 android-build
 ```
+
+Each Android gate first runs the mounted logo pipeline. Logo-only iteration is
+available through `logo-info`, `logo-test`, `logo-validate`, `logo-build`,
+`logo-install`, and `logo-all` without starting another container.
 
 Use `android-all` for those three gates together. `android-mcp` is an explicit
 stdio/device operation and is not part of `all`; install, launch, and playback
@@ -113,6 +119,36 @@ After component outputs already pass, avoid recompiling them:
 Or run those four stages together with `runtime-all`. `runtime-stage` verifies
 the Core gzip archive, XMLTV JAR, the MIM checksum set, and copy hashes before
 the Docker context is changed.
+
+`runtime-images` first hashes only the runtime-environment inputs and compares
+that value with both installed image labels. If they match, no Docker build is
+performed. Inspect this decision independently with:
+
+```powershell
+.\opensagetv-vibe-dev.ps1 runtime-image-status
+```
+
+Dockerfile, Ubuntu/Java/GPU runtime packages, system libraries, and container
+entrypoint/supervisor changes require an image build. Core, MIM, XMLTV, and
+Comskip application changes do not.
+
+## Component-only appdata updates
+
+After the relevant component build/test succeeds:
+
+```powershell
+.\opensagetv-vibe-dev.ps1 runtime-update-package mim
+.\opensagetv-vibe-dev.ps1 runtime-update-test mim
+```
+
+Use `core`, `mim`, `xmltv`, or `comskip`; use `all` only with the test command.
+The package and SHA-256 sidecar are under the container repository's
+`output/component-updates`. Transfer both to the low-CPU Unraid server or use
+`opensagetv-vibe-container/scripts/deploy-component-update.sh`. The installer
+targets the isolated Vibe container by default, creates a timestamped appdata
+backup, performs atomic replacements, restarts only that container, and runs a
+component health check. It does not rebuild/reload Docker and it does not
+restart production SageTV or OpenDCT.
 
 ## Commissioned OpenDCT test
 
@@ -153,6 +189,10 @@ gzip -t images/opensagetv-vibe-server-u26-gpu-j11.tar.gz
 gzip -dc images/opensagetv-vibe-server-u26-gpu-j11.tar.gz | docker load
 docker image inspect ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11
 ```
+
+The `ghcr.io/...` text is only the canonical tag stored inside the exported
+Docker archive. The workflow does not upload that tag to GHCR. `docker load`
+creates it locally on Unraid from the transferred file.
 
 Use a new appdata directory. The release contains no current server database,
 properties, recordings, passwords, or other commissioned state.

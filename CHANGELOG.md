@@ -2,6 +2,133 @@
 
 ## Unreleased
 
+- Prepared `opensagetv-vibe-build-env` for public source development under the
+  Apache License 2.0 with contribution, security, and third-party dependency
+  notices plus read-only GitHub repository checks.
+- Made registry policy explicit: development/runtime images remain local build
+  products and are distributed only as checksummed commissioning export files;
+  this repository does not push Docker images to GHCR or another registry.
+- Updated the release manifest to FFmpeg/MIM 0.4.8, XMLTV 3.5.0, and Android
+  client 0.5.85 and encoded the no-registry/export-file policy.
+
+- Made the single reusable development container checkout-aware for Android.
+  Android root scripts now pass their own absolute project root to the unified
+  environment, which labels and mounts that exact checkout at
+  `/workspace/android-client`. Switching between the canonical tree and an
+  independent release-verification worktree recreates only
+  `opensagetv-vibe-dev` with the new bind mount; the build image and both
+  persistent caches are reused. This prevents an independent workflow from
+  silently testing the canonical working tree.
+
+- Fixed every Windows `create_ai_handoff_zip.cmd` wrapper to pass
+  `-ProjectRoot "%~dp0."`. A quoted `%~dp0` ends in a backslash and can cause
+  native Windows PowerShell to deliver a malformed value containing a quote or
+  line ending to `Path.GetFullPath()`. The shared workflow contract now checks
+  all eight wrappers so synchronized project workflows cannot reintroduce the
+  failure.
+
+- Added `opensagetv-vibe-logo` as the eighth workspace project and release
+  provenance input. Build-environment contract v8 installs pinned CairoSVG,
+  Pillow, libcairo, Fontconfig, and Python dependencies; mounts the logo source;
+  exposes logo-only commands; and regenerates/validates/SHA-installs all Android
+  artwork before every Android test, validation, build, bundle, or full gate.
+  The rebuilt image, generated APK resource inventory, Android 1,286-file
+  manifest, and complete eight-repository handoff workflow all pass.
+  Logo component `all` now generates disposable output before validating it,
+  so a clean checkout or updated image-mode contract cannot fail on stale
+  generated artwork.
+
+- Added bounded APT retries to the unified image dependency layer so a
+  transient Ubuntu mirror/proxy fetch error does not invalidate an otherwise
+  reproducible toolchain build.
+- Bumped the unified image contract to `u26-j11-release-v7` and made the
+  deterministic Android DVD/video fixture toolchain reproducible. Clean image
+  builds now install and validate `dvdauthor`/`spumux`/`spuunmux`, ImageMagick,
+  fontconfig, and DejaVu fonts alongside FFmpeg/ffprobe. `android-info` records
+  the authoring tool/font versions; the shared workflow contract prevents these
+  packages or executable checks from disappearing silently.
+- Added persistent `opensagetv-vibe-ccache` alongside the existing Gradle
+  cache and wired it into Linux/Windows FFmpeg/MIM compilation. A repeat Linux
+  build reached 2478 cache hits from 2761 cacheable calls (89.75%).
+- Added `runtime-update-package` and `runtime-update-test` to the unified
+  Windows/Linux interface for Core, MIM, XMLTV, and Comskip appdata updates.
+  All four component package/install/rollback self-tests pass.
+- Added Buildx 0.36.1 to the unified image, changed runtime images to BuildKit,
+  added runtime-environment fingerprint status/skip handling, and retained only
+  the canonical production/debug images. The one reusable development
+  container and two intentional cache volumes remain.
+- Fixed `dev.cmd` environment forwarding through WSL so force flags, OpenDCT
+  commissioning values, runtime soak controls, and image overrides reach the
+  unified container exactly as they do on Linux.
+
+- Bumped the unified image to `u26-j11-release-v6` and added Ubuntu's
+  `smbclient`. Environment validation now requires it, enabling the Android MCP
+  fixture workflow to publish deterministic caption/seek/Comskip media to an
+  SMB2/SMB3 test share from the same reusable development container.
+- Rebuilt and recreated the single reusable development environment on
+  2026-08-30. Image ID
+  `sha256:a3b97ab5e64e2e5fcff57384b0fde6436f01c0e15f9b99afa9fae5a5b42039a4`
+  passed Java 11/17/8, Android SDK/NDK/platform-tools, bundletool, MCP,
+  Docker-socket, and Samba 4.23.6 client validation.
+- Rebuilt the unified development image with bundletool 1.18.3 and the complete
+  Android/Core toolchain; current image ID is
+  `sha256:365419322572efdb7b13dd89029f4dc1f27496dcc8267df21cf4fa9c1a2d1cb4`.
+  The component Python syntax gate now excludes frozen/third-party/build output
+  trees so retained Python 2 upstream helpers cannot be misclassified as
+  current Python 3 workflow code.
+- Added checksum-pinned Google bundletool 1.18.3 to the unified Android
+  toolchain and made environment validation fail if it is absent or reports a
+  different version. This supports reproducible AAB validation and APK-set
+  installation gates without creating a separate Android build image.
+- Completed a fresh `runtime-all` on 2026-08-29 after the clean Core rebuild.
+  Exact artifact staging, Ubuntu 26 production/debug images, discovery, XMLTV,
+  OpenDCT wire protocol, one supervised JVM recovery, three full container
+  restarts, zero-zombie checks, SPDX SBOMs, image exports, and offline release
+  assembly passed.
+- Record both Docker Desktop's local image-store ID and the portable
+  `docker save` archive config ID. Containerd-backed Docker Desktop can expose
+  different values; the archive ID is the identity observed after loading on
+  Unraid and is now used by image SBOM provenance.
+- Added a workspace handoff creator and commissioner. One command creates
+  verified changed-files packages for all seven repositories and a parent ZIP
+  containing the updater plus Windows commissioning entrypoint.
+- Added a host installer that accepts the outer workspace ZIP, extracts it to
+  a temporary directory, verifies the expected seven packages, runs the full
+  commissioner, and cleans only that temporary extraction.
+- Added an isolated workflow self-test covering automatic and explicit ZIP
+  application, manifest/baseline validation, all four gates, and completed
+  state resume; added a seven-repository contract test for the common files,
+  metadata, shell syntax, and root command interface.
+- Added a synthetic seven-repository outer-bundle test that proves ZIP
+  extraction and test/validate/build/install dispatch without touching real
+  worktrees.
+- Limited Git safe-directory setup inside the unified container to the six
+  known mounted source repositories so Core builds work from Windows bind
+  mounts without weakening Git ownership checks globally.
+- Added the shared cross-repository takeover/update implementation and the
+  standard root dev, update, handoff-package, documentation, metadata, task,
+  and `artifacts/downloads` contract used by every supported component.
+- Added `android-requirements.lock` for the exact transitive Python/MCP
+  environment, pinned Android platform-tools to revision 37.0.1 with a
+  post-install guard, and moved authoritative build-environment version
+  metadata after the expensive SDK layer. Component/source-only edits continue
+  to reuse the installed image and do not rebuild that layer.
+- Completed Android download reproducibility with the component's Gradle
+  distribution checksum, dependency lockfiles, and artifact checksum
+  verification metadata. The unified `android-all` gate now passes 174 project
+  tests, 35 MCP tests, validation, and all 60 clean Gradle tasks.
+- Exported `/workspace/release-manifest` as
+  `OPENSAGETV_VIBE_BUILD_ENV_ROOT` for direct unified Android commands so tests
+  inspect the mounted unified wrappers instead of assuming a differently named
+  sibling path.
+- Added a normalized sibling-workspace identity to both host wrappers. The one
+  named development container is now recreated when a command is launched from
+  a different checkout instead of silently continuing with stale bind mounts;
+  Windows and WSL representations of the same path normalize to one identity.
+- Proved the rebind behavior with an independently committed Android/build-env
+  sibling layout: its root test, validation, and clean 60-task build passed on
+  the installed image, after which the one container was rebound to the real
+  workspace and the temporary checkout was removed.
 - Verified the complete post-integration Windows Docker Desktop `all` pipeline
   on 2026-08-28. Core, Linux/Windows FFmpeg/MIM, MIM media integrity, XMLTV,
   Android tests/validation/APK, production/debug images, runtime discovery and

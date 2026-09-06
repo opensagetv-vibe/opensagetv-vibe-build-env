@@ -1,0 +1,40 @@
+name: Build environment repository checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-env-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository-checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify publication policy and syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f LICENSE
+          test -f THIRD_PARTY_NOTICES.md
+          test -f release.properties
+          grep -qx '  publish_container_images_to_registry: false' release-manifest.yml
+          bash -n opensagetv-vibe-dev.sh checkout-all.sh dev.sh update.sh
+          find scripts tests -type f -name '*.sh' -print0 | xargs -0 -r bash -n
+          python3 -m py_compile scripts/*.py
+          git diff --check
+          test ! -e output
+          if find artifacts -mindepth 1 -type f ! -path 'artifacts/downloads/.gitkeep' -print -quit 2>/dev/null | grep -q .; then
+            echo 'Generated artifacts must not be committed.' >&2
+            exit 1
+          fi
+
+  # Full builds run locally through the one Ubuntu 26 development container.
+  # This workflow never builds or publishes registry images.

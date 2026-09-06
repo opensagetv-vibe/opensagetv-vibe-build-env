@@ -1,18 +1,99 @@
 # OpenSageTV Vibe build-environment handoff
 
+## Standard takeover
+
+Read `AGENTS.md`, `README.md`, `TASKS.md`, and `WORKFLOW.md`, then run
+`dev.cmd test`, `dev.cmd validate`, and the appropriate build gate. Updates and
+handoff packages use `artifacts/downloads` and the root update/package scripts.
+Windows handoff wrappers must retain the `-ProjectRoot "%~dp0."` form; the dot
+is intentional protection against native PowerShell's quoted trailing-backslash
+argument parsing. The eight-repository workflow contract enforces it.
+
 ## Current state
 
-The unified build/release workflow is operational. On 2026-08-28 the Windows
-Docker Desktop wrapper completed the full post-Android-integration `all`
-pipeline with `BUILD PASSED` from the one reusable `opensagetv-vibe-dev`
-container. The validated development image is
-`sha256:327a6bc70b719e9111143b5cd3c8af8314aa9a71dc2b6cf3fe0ad9ed4e1b9983`.
+The unified build/release workflow is operational. On 2026-09-04 the one
+development image was rebuilt with Buildx/BuildKit, persistent ccache, the
+complete deterministic media-fixture toolchain, and the logo toolchain; its
+current ID is
+`sha256:fb832f6ccdcbc6df811a27eb4401958110505bac9f8abf9e38d86ed691bf6ed6`.
+The only reusable development container remains `opensagetv-vibe-dev`.
+Android component wrappers pass the invoking checkout path into that unified
+container. The container is recreated with a different bind mount only when
+an independent Android checkout is selected; its image, name, Gradle cache,
+and ccache are retained. The v0.5.75-to-v0.5.85 independent update test proved
+that the tests/build came from the worktree rather than the canonical source.
+Java 11/17/8, Android SDK/NDK/platform-tools, bundletool, MCP, Docker socket,
+Buildx 0.36.1, ccache, and Samba client checks pass. The intended persistent
+volumes are `opensagetv-vibe-gradle-cache` and
+`opensagetv-vibe-ccache`; no phase-specific containers are used.
+
+The Dockerfile contract is `u26-j11-release-v8`. It adds a pinned isolated logo
+Python environment (CairoSVG 2.9.0 and Pillow 12.3.0), libcairo/Fontconfig,
+the mounted logo project, and automatic generation/validation/SHA-verified
+Android installation. It also permanently includes
+the deterministic DVD/video fixture authoring tools (`dvdauthor`, `spumux`,
+`spuunmux`, ImageMagick, fontconfig, DejaVu fonts, FFmpeg, and ffprobe). The
+rebuilt image and the one recreated reusable container pass all executable and
+version checks. The logo pipeline passes all three unit tests, generates and
+validates 25 Android-owned resources, installs them with bounded manifest
+updates, and the packaged debug APK contains the complete drawable, launcher,
+round-launcher, adaptive-foreground, and adaptive-background resource set. The
+Android 1,286-file project manifest and complete eight-repository handoff
+workflow pass. A real 1920x1080i MPEG-2 TS fixture with synchronized visual/
+audio pulses, dual AC-3, CEA-608/708, and its Comskip sidecar was generated and
+probed inside that container. `dev.cmd test` and `dev.cmd validate` pass.
+
+The current canonical local runtime images are production
+`sha256:89af7475dec66aef328113f9de3b33bf24a656e8b4b6de44153429e4e0d1613a`
+and debug
+`sha256:89d55c387a27cacf67c3021c11123cd97b16a897fd2153a9063f3d83c064f127`.
+Both record runtime-environment fingerprint
+`ffc4bbb4b0e3068245e1dc4abb25441e7be1e0b819510a26b9c278a49c8dfcfd`.
+`runtime-image-status` reports `runtime_image_rebuild_needed=false`, and a
+normal `runtime-images` invocation exits without rebuilding. Project cleanup
+reports zero dangling Vibe images.
+
+Core, MIM, XMLTV, and Comskip now have verified component-only packages. Their
+package/install/rollback self-tests all pass. MIM 0.4.7 was installed on the
+isolated Unraid test instance by updating appdata and restarting only that
+container; the protected production SageTV and OpenDCT instances retained
+their prior start times. Appdata replacements persist across normal restarts;
+the image reseeds a component only when its image fingerprint changes or an
+explicit recovery reset is requested.
+
+On 2026-08-29 `runtime-all` staged the clean current Core, FFmpeg/MIM, XMLTV,
+and Android outputs, rebuilt production/debug images, passed the complete
+runtime validation and release assembly, and exported the exact production
+archive subsequently commissioned on Unraid. The production local image-store
+ID is
+`sha256:98aa13d5f93b9aa3110a6e33f09058d8cc0cbbffc2554fb89ef14d85d3354ea5`;
+the portable archive config ID loaded by Unraid is
+`sha256:fb6ebf551d9cc3fbf1ccfd1dffc6ef52aa1270f3edfbdbe9c5be90ad755858c0`.
+Release provenance now records both explicitly instead of assuming they are
+identical under Docker Desktop's containerd-backed image store.
+
+Both host wrappers label the reusable container with a normalized sibling-
+workspace identity. Moving to another checkout recreates the same named
+container with correct bind mounts while preserving the shared Gradle cache;
+Windows and WSL calls from the same checkout continue to reuse it.
+
+The common workflow contract and isolated update-runner self-test pass on
+2026-08-28. The latter proves automatic and explicit changed-files ZIP
+application, all test/validate/build/install gates, and completed-state resume.
+Use `create_workspace_handoff_zip.cmd` to produce the complete eight-project
+commissioning bundle under `artifacts/downloads`. Use
+`install_workspace_handoff_zip.cmd [ZIP] [PROJECTS_ROOT]` when the outer ZIP
+also needs to be extracted before applying its verified packages and running
+all resumable gates.
+An independently committed temporary sibling layout passed Android test,
+validation, and clean build through that mechanism; the container is currently
+restored to `C:/TMP_SAGETV_DOCKER/projects`.
 
 Java 11 remains the default server toolchain, while Android commands select
 JDK 17 and the frozen comparison command selects JDK 8 per process. The
-Android gate passed 151 scaffold/static tests, 35 MCP tests, full validation,
-and a clean 60-task build. Its APK SHA-256 remained byte-identical to Phase 1:
-`839113f460fed5e6f37ec244ea6a2fbc574c32e5f9b131085c95a349bb364a69`.
+original Android integration gate passed 151 scaffold/static tests, 35 MCP
+tests, full validation, and a clean 60-task build. The subsequently reviewed
+v0.5.80 tree passed the larger gate and its current hash is recorded below.
 
 Passed stages:
 
@@ -41,11 +122,31 @@ and must be rerun on the target network. Android MiniClient and physical
 AMD/NVIDIA commissioning remain product release gates, not build-environment
 failures. MIM therefore remains disabled by default.
 
+The current Android v0.5.80 working tree was also revalidated independently
+through this installed image: 174 scaffold/static tests, 35 MCP tests, full
+source validation, and a clean 60-task build pass. Its current APK SHA-256 is
+`60e1d19ab15968ef48e24691cfd14f8998ce0bc6e6e8bda960f6d65e8d8aa668`.
+
+The eight repositories now share the same location-independent root workflow,
+resumable update gates, package directory, takeover documents, and
+`create_ai_handoff_zip.cmd`. An isolated temporary Git fixture passed package
+creation, path/hash/manifest validation, extraction, all four gates, and a
+second completed-state resume run. The workspace handoff command packages and
+applies all components in dependency order.
+
+Python/MCP dependencies are installed from the exact transitive
+`android-requirements.lock`; Android platform-tools are pinned and checked at
+37.0.1. The Android repository owns its Gradle wrapper checksum, dependency
+lockfiles, and artifact verification metadata. Authoritative image-version
+metadata is after the expensive SDK installation layer, so component source
+changes continue to reuse the installed image.
+
 ## Architecture invariants
 
 - Development image: `opensagetv-vibe-build-env:u26-j11`.
 - Reusable development container: `opensagetv-vibe-dev`.
 - Intentional cache volume: `opensagetv-vibe-gradle-cache`.
+- Intentional compiler cache volume: `opensagetv-vibe-ccache`.
 - Runtime images are outputs, not development environments.
 - FFmpeg Linux/Windows toolchains are private Docker stages owned here.
 - Android SDK 29/36, NDK 21, JDK 17/JDK 8, ADB, and MCP are owned here; they
@@ -67,6 +168,11 @@ Run `opensagetv-vibe-dev.ps1 all` on Windows Docker Desktop or
 `opensagetv-vibe-dev.sh all` on Linux. `image` is needed only when the unified
 Dockerfile/build dependencies change. `runtime-all` is the quick post-component
 path for artifact staging, runtime image/test, and release regeneration.
+For ordinary Core/MIM/XMLTV/Comskip changes, prefer
+`runtime-update-package COMPONENT` and `runtime-update-test COMPONENT`; do not
+rebuild the runtime image. `runtime-image-status` is the authoritative rebuild
+decision. Windows host variables are explicitly forwarded through WSL and then
+into Docker.
 
 The authoritative results are:
 
@@ -97,5 +203,7 @@ NVIDIA device tests, Android MiniClient live playback, and a clean Unraid
 commissioning/reload of the exact exported image. Keep MIM disabled until those
 independent gates pass.
 
-No repository or release has been pushed. Publication remains explicitly out of
-scope until approved by the repository owner.
+Source publication is approved under the `opensagetv-vibe` GitHub organization.
+Publish this repository's reviewed source and commissioning scripts only. Do
+not push the development or runtime Docker images to a registry; release them
+as checksummed export files for offline `docker load` commissioning.
