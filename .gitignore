@@ -4,4 +4,7 @@
 *.tar
 *.tar.zst
 *.zip
-
+/artifacts/*
+!/artifacts/downloads/
+/artifacts/downloads/*
+!/artifacts/downloads/.gitkeep
