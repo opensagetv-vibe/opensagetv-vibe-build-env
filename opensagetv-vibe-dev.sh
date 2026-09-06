@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; projects="$(cd "$root/.." && pwd)"
+android_project="${OPENSAGETV_VIBE_ANDROID_PROJECT_ROOT:-$projects/opensagetv-vibe-android-client}"
+android_project="$(cd "$android_project" && pwd)"
 image="${OPENSAGETV_VIBE_BUILD_IMAGE:-opensagetv-vibe-build-env:u26-j11}"
 container="${OPENSAGETV_VIBE_DEV_CONTAINER:-opensagetv-vibe-dev}"
 ffmpeg_commit="${OPENSAGETV_VIBE_FFMPEG_COMMIT:-bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa}"
@@ -12,15 +14,29 @@ forwarded_environment=(
   OPENDCT_TEST_HOST OPENDCT_TEST_PORT OPENDCT_TEST_ENCODER
   OPENSAGETV_VIBE_RELEASE_ID OPENSAGETV_VIBE_BUILD_IMAGE OPENSAGETV_VIBE_SERVER_IMAGE
   OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE
+  FORCE_RUNTIME_IMAGE_BUILD
   OPENSAGETV_VIBE_RESTART_CYCLES OPENSAGETV_VIBE_RESTART_TIMEOUT_SECONDS
   OPENSAGETV_VIBE_STOP_TIMEOUT_SECONDS OPENSAGETV_VIBE_METRIC_SETTLE_SECONDS
   OPENSAGETV_VIBE_MAX_FD_GROWTH OPENSAGETV_VIBE_MAX_THREAD_GROWTH
   OPENSAGETV_VIBE_MAX_RSS_GROWTH_KIB
 )
 
+workspace_id() {
+  local path="${1//\\//}"
+  # Treat a Windows path and the same path as seen through WSL as one checkout.
+  if [[ "$path" =~ ^/mnt/([A-Za-z])(/.*)$ ]]; then
+    printf '%s:%s\n' "${BASH_REMATCH[1],,}" "${BASH_REMATCH[2]}"
+  else
+    printf '%s\n' "${path%/}"
+  fi
+}
+projects_id="$(workspace_id "$projects")"
+android_project_id="$(workspace_id "$android_project")"
+
 image_build() {
   docker buildx build --load --progress=plain \
     --build-context "ffmpeg_src=$ffmpeg_context" \
+    --build-context "logo_src=$projects/opensagetv-vibe-logo" \
     --build-arg "FFMPEG_COMMIT=$ffmpeg_commit" \
     -t "$image" "$root"
 }
@@ -42,25 +58,41 @@ container_remove() {
 }
 container_ensure() {
   image_ensure
-  local desired_image current_image running
+  local desired_image current_image current_projects current_android running
   desired_image="$(docker image inspect "$image" --format '{{.Id}}')"
   if docker container inspect "$container" >/dev/null 2>&1; then
     current_image="$(docker inspect "$container" --format '{{.Image}}')"
     if [[ "$current_image" != "$desired_image" ]]; then
       echo "Recreating $container because the build image changed."
       container_remove
+    else
+      current_projects="$(docker inspect "$container" --format '{{index .Config.Labels "org.opensagetv.vibe.projects-root"}}')"
+      if [[ "$current_projects" != "$projects_id" ]]; then
+        echo "Recreating $container because the sibling workspace changed."
+        container_remove
+      else
+        current_android="$(docker inspect "$container" --format '{{index .Config.Labels "org.opensagetv.vibe.android-project-root"}}')"
+        if [[ "$current_android" != "$android_project_id" ]]; then
+          echo "Recreating $container because the active Android checkout changed."
+          container_remove
+        fi
+      fi
     fi
   fi
   if ! docker container inspect "$container" >/dev/null 2>&1; then
     docker create --name "$container" --init \
       --label org.opensagetv.vibe.role=unified-dev \
+      --label "org.opensagetv.vibe.projects-root=$projects_id" \
+      --label "org.opensagetv.vibe.android-project-root=$android_project_id" \
       --entrypoint sleep \
       -v opensagetv-vibe-gradle-cache:/work/.gradle \
+      -v opensagetv-vibe-ccache:/work/.ccache \
       -v "$projects/opensagetv-vibe-core:/work/sagetv" \
       -v "$projects/opensagetv-vibe-ffmpeg-mim:/project" \
       -v "$projects/opensagetv-vibe-xmltv-import:/workspace/xmltv-import" \
       -v "$projects/opensagetv-vibe-container:/workspace/container" \
-      -v "$projects/opensagetv-vibe-android-client:/workspace/android-client" \
+      -v "$projects/opensagetv-vibe-logo:/workspace/logo" \
+      -v "$android_project:/workspace/android-client" \
       -v "$root:/workspace/release-manifest" \
       -v /var/run/docker.sock:/var/run/docker.sock \
       "$image" infinity >/dev/null
@@ -89,7 +121,7 @@ case "$cmd" in
     ;;
   remove-dev) container_remove ;;
   shell) container_ensure; exec docker exec -it "$container" bash "$@" ;;
-  all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|android-info|android-test|android-validate|android-build|android-all|android-mcp|runtime-stage|runtime-images|runtime-test|release|runtime-all|clean)
+  all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
     container_ensure
     # Run the bind-mounted controller so orchestration changes do not require
     # rebuilding the dependency image.
@@ -105,7 +137,7 @@ case "$cmd" in
       bash /workspace/release-manifest/scripts/dev-entrypoint.sh "$cmd" "$@"
     ;;
   *)
-    echo "Usage: $0 {image|start|stop|remove-dev|all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|android-info|android-test|android-validate|android-build|android-all|android-mcp|runtime-stage|runtime-images|runtime-test|release|runtime-all|clean|shell}" >&2
+    echo "Usage: $0 {image|start|stop|remove-dev|all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean|shell}" >&2
     exit 2
     ;;
 esac

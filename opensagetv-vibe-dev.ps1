@@ -1,6 +1,7 @@
 param(
-  [ValidateSet('image','start','stop','remove-dev','all','core','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','xmltv','android-info','android-test','android-validate','android-build','android-all','android-mcp','runtime-stage','runtime-images','runtime-test','release','runtime-all','clean','shell')]
-  [string]$Command='all'
+  [ValidateSet('image','start','stop','remove-dev','all','core','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','xmltv','logo-info','logo-test','logo-validate','logo-build','logo-install','logo-all','android-info','android-test','android-validate','android-build','android-bundle','android-bundle-install','android-all','android-mcp','runtime-stage','runtime-images','runtime-image-status','runtime-test','runtime-update-package','runtime-update-test','release','runtime-all','clean','shell')]
+  [string]$Command='all',
+  [Parameter(ValueFromRemainingArguments=$true)][string[]]$CommandArgs
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,6 +12,10 @@ $container = if ($env:OPENSAGETV_VIBE_DEV_CONTAINER) { $env:OPENSAGETV_VIBE_DEV_
 $ffmpegCommit = if ($env:OPENSAGETV_VIBE_FFMPEG_COMMIT) { $env:OPENSAGETV_VIBE_FFMPEG_COMMIT } else { 'bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa' }
 $ffmpegContext = if ($env:OPENSAGETV_VIBE_FFMPEG_SOURCE_CONTEXT) { $env:OPENSAGETV_VIBE_FFMPEG_SOURCE_CONTEXT } else { "https://github.com/FFmpeg/FFmpeg.git?tag=n9.0.1&checksum=$ffmpegCommit" }
 $legacyBuilderImage = 'opensagetv-vibe-ffmpeg-mim-builder:9.0.1-v5'
+$projectsId = ([IO.Path]::GetFullPath($projects)).TrimEnd('\', '/').Replace('\', '/')
+if ($projectsId -match '^([A-Za-z]):/(.*)$') {
+  $projectsId = $Matches[1].ToLowerInvariant() + ':/' + $Matches[2]
+}
 $forwardedEnvironment = @(
   'OPENDCT_TEST_HOST',
   'OPENDCT_TEST_PORT',
@@ -19,6 +24,7 @@ $forwardedEnvironment = @(
   'OPENSAGETV_VIBE_BUILD_IMAGE',
   'OPENSAGETV_VIBE_SERVER_IMAGE',
   'OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE',
+  'FORCE_RUNTIME_IMAGE_BUILD',
   'OPENSAGETV_VIBE_RESTART_CYCLES',
   'OPENSAGETV_VIBE_RESTART_TIMEOUT_SECONDS',
   'OPENSAGETV_VIBE_STOP_TIMEOUT_SECONDS',
@@ -42,6 +48,7 @@ function Test-DockerObject([string[]]$Arguments) {
 function Build-Image {
   & docker buildx build --load --progress=plain `
     --build-context "ffmpeg_src=$ffmpegContext" `
+    --build-context "logo_src=$projects\opensagetv-vibe-logo" `
     --build-arg "FFMPEG_COMMIT=$ffmpegCommit" `
     -t $image $root
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -82,17 +89,29 @@ function Ensure-DevContainer {
       Write-Output "Recreating $container because the build image changed."
       Remove-DevContainer
     }
+    else {
+      $containerDetails = ((& docker inspect $container) | ConvertFrom-Json)[0]
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      $currentProjects = [string]$containerDetails.Config.Labels.'org.opensagetv.vibe.projects-root'
+      if ($currentProjects -ne $projectsId) {
+        Write-Output "Recreating $container because the sibling workspace changed."
+        Remove-DevContainer
+      }
+    }
   }
 
   if (-not (Test-DockerObject @('container','inspect',$container))) {
     & docker create --name $container --init `
       --label 'org.opensagetv.vibe.role=unified-dev' `
+      --label "org.opensagetv.vibe.projects-root=$projectsId" `
       --entrypoint sleep `
       -v 'opensagetv-vibe-gradle-cache:/work/.gradle' `
+      -v 'opensagetv-vibe-ccache:/work/.ccache' `
       -v "$projects\opensagetv-vibe-core:/work/sagetv" `
       -v "$projects\opensagetv-vibe-ffmpeg-mim:/project" `
       -v "$projects\opensagetv-vibe-xmltv-import:/workspace/xmltv-import" `
       -v "$projects\opensagetv-vibe-container:/workspace/container" `
+      -v "$projects\opensagetv-vibe-logo:/workspace/logo" `
       -v "$projects\opensagetv-vibe-android-client:/workspace/android-client" `
       -v "${root}:/workspace/release-manifest" `
       -v '/var/run/docker.sock:/var/run/docker.sock' `
@@ -155,6 +174,7 @@ switch ($Command) {
       }
     }
     $dockerArgs += @($container, 'bash', '/workspace/release-manifest/scripts/dev-entrypoint.sh', $Command)
+    $dockerArgs += $CommandArgs
     & docker @dockerArgs
     exit $LASTEXITCODE
   }

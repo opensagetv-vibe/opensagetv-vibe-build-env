@@ -6,6 +6,7 @@ core="${CORE_SOURCE:-/work/sagetv}"
 fm="${MIM_SOURCE:-/project}"
 xmltv="${XMLTV_SOURCE:-/workspace/xmltv-import}"
 container="${CONTAINER_SOURCE:-/workspace/container}"
+logo="${LOGO_SOURCE:-/workspace/logo}"
 android="${ANDROID_SOURCE:-/workspace/android-client}"
 release_id="${OPENSAGETV_VIBE_RELEASE_ID:-opensagetv-vibe-9.2.10-u26-j11}"
 production_image="${OPENSAGETV_VIBE_SERVER_IMAGE:-ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11}"
@@ -24,6 +25,8 @@ test -s "$fm/output/linux-x64/ffmpeg_MIM"
 test -s "$fm/output/windows-x64/SageTVTranscoder.exe"
 test -s "$xmltv/output/packages/XMLTVImportPlugin.jar"
 test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk"
+test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.aab"
+test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-release-candidate.aab"
 test -s "$android/VERSION"
 test -s "$opendct_status"
 test -s "$runtime_validation_log"
@@ -59,6 +62,12 @@ cp -a "$xmltv/output/config-examples" "$release_dir/components/xmltv/"
 cp -a "$xmltv/output/test-results" "$release_dir/components/xmltv/"
 cp "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk" \
   "$release_dir/components/android-client/"
+cp "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.aab" \
+  "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apks" \
+  "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-release-candidate.aab" \
+  "$release_dir/components/android-client/"
+cp -a "$android/artifacts/reports/bundletool-"* \
+  "$release_dir/components/android-client/"
 cp "$android/VERSION" "$release_dir/components/android-client/VERSION"
 cp "$runtime_validation_log" "$release_dir/test-results/runtime-validation.log"
 cp "$android_test_log" "$release_dir/test-results/android-client.log"
@@ -81,6 +90,27 @@ gzip -t "$debug_archive"
 gzip -dc "$production_archive" | tar -tf - >/dev/null
 gzip -dc "$debug_archive" | tar -tf - >/dev/null
 
+archive_config_id() {
+  gzip -dc "$1" | tar -xOf - manifest.json | python3 -c '
+import json, pathlib, re, sys
+records = json.load(sys.stdin)
+if len(records) != 1:
+    raise SystemExit(f"expected one exported image, found {len(records)}")
+config_path = records[0]["Config"]
+name = pathlib.PurePosixPath(config_path).name
+match = re.fullmatch(r"([0-9a-f]{64})(?:\.json)?", name)
+if not match:
+    raise SystemExit(f"invalid exported image config path: {config_path}")
+print("sha256:" + match.group(1))
+'
+}
+
+# Docker Desktop's containerd-backed local image-store ID can differ from the
+# config digest written by `docker save`. Record both: the exported config ID
+# is the identity that `docker load` will expose on the target Unraid host.
+production_export_id="$(archive_config_id "$production_archive")"
+debug_export_id="$(archive_config_id "$debug_archive")"
+
 production_packages="$release_dir/sbom/production-packages.tsv"
 debug_packages="$release_dir/sbom/debug-packages.tsv"
 docker run --rm --entrypoint /usr/bin/dpkg-query "$production_image" -W '-f=${Package}\t${Version}\t${Architecture}\n' | sort > "$production_packages"
@@ -93,22 +123,25 @@ python3 "$manifest_root/scripts/generate-sbom.py" \
   --root "$release_dir/components" --output "$release_dir/sbom/release-artifacts.spdx.json"
 python3 "$manifest_root/scripts/generate-sbom.py" \
   --name opensagetv-vibe-server-production --version "$release_id" \
-  --image-id "$production_id" --packages "$production_packages" \
+  --image-id "$production_export_id" --packages "$production_packages" \
   --output "$release_dir/sbom/production-image.spdx.json"
 python3 "$manifest_root/scripts/generate-sbom.py" \
   --name opensagetv-vibe-server-debug --version "$release_id" \
-  --image-id "$debug_id" --packages "$debug_packages" \
+  --image-id "$debug_export_id" --packages "$debug_packages" \
   --output "$release_dir/sbom/debug-image.spdx.json"
 
 python3 "$manifest_root/scripts/generate-release-manifest.py" \
   --release-id "$release_id" --release-dir "$release_dir" \
   --production-image "$production_image" --debug-image "$debug_image" \
+  --production-export-id "$production_export_id" \
+  --debug-export-id "$debug_export_id" \
   --build-image "$build_image" \
   --repo build_env "$manifest_root" \
   --repo core "$core" \
   --repo container "$container" \
   --repo ffmpeg_mim "$fm" \
   --repo xmltv_import "$xmltv" \
+  --repo logo "$logo" \
   --repo android_client "$android" \
   --opendct-status "$opendct_status" \
   --runtime-validation-log "$runtime_validation_log" \
@@ -121,8 +154,12 @@ cat > "$release_dir/RELEASE_REPORT.md" <<EOF
 
 - Release: $release_id
 - Platform: linux/amd64
-- Production image: $production_image ($production_id)
-- Debug image: $debug_image ($debug_id)
+- Production image: $production_image
+  - local image-store ID: $production_id
+  - exported archive config ID: $production_export_id
+- Debug image: $debug_image
+  - local image-store ID: $debug_id
+  - exported archive config ID: $debug_export_id
 - Development image: $build_image ($(docker image inspect "$build_image" --format '{{.Id}}'))
 - MIM default: disabled
 - Hardware decode default: enabled

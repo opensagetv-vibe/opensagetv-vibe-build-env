@@ -6,9 +6,10 @@ ubuntu: "26.04"
 java: "11"
 versions:
   sagetv: "9.2.10"
-  ffmpeg_mim: "0.4.5"
-  xmltv_import: "3.5"
-  android_client: "0.5.75"
+  ffmpeg_mim: "0.4.8"
+  xmltv_import: "3.5.0"
+  logo: "1.0.0"
+  android_client: "0.5.85"
 toolchains:
   ffmpeg_tag: "n9.0.1"
   ffmpeg_commit: "bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa"
@@ -25,12 +26,15 @@ components:
   container: "https://github.com/opensagetv-vibe/opensagetv-vibe-container.git"
   ffmpeg_mim: "https://github.com/opensagetv-vibe/opensagetv-vibe-ffmpeg-mim.git"
   xmltv_import: "https://github.com/opensagetv-vibe/opensagetv-vibe-xmltv-import.git"
+  logo: "https://github.com/opensagetv-vibe/opensagetv-vibe-logo.git"
   android_client: "https://github.com/opensagetv-vibe/opensagetv-vibe-android-client.git"
 resolved_manifest: "output/releases/opensagetv-vibe-9.2.10-u26-j11/release-manifest.json"
 images:
   production: "ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11"
   debug: "ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11-debug"
 policy:
+  publish_container_images_to_registry: false
+  export_container_images_as_files: true
   mim_enabled_by_default: false
   hardware_decode_default: true
   runtime_downloads_latest: false

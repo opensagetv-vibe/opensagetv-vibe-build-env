@@ -21,6 +21,7 @@ repositories=(
   opensagetv-vibe-container
   opensagetv-vibe-ffmpeg-mim
   opensagetv-vibe-xmltv-import
+  opensagetv-vibe-logo
   opensagetv-vibe-android-client
   opensagetv-vibe-archive
 )
@@ -32,6 +33,7 @@ manifest_name() {
     opensagetv-vibe-container) echo container ;;
     opensagetv-vibe-ffmpeg-mim) echo ffmpeg_mim ;;
     opensagetv-vibe-xmltv-import) echo xmltv_import ;;
+    opensagetv-vibe-logo) echo logo ;;
     opensagetv-vibe-android-client) echo android_client ;;
     *) return 1 ;;
   esac
@@ -63,7 +65,7 @@ for repository in "${repositories[@]}"; do
   fi
 
   branch=ubuntu26-modern-build
-  if [[ "$repository" == opensagetv-vibe-archive || "$repository" == opensagetv-vibe-android-client ]]; then
+  if [[ "$repository" == opensagetv-vibe-archive || "$repository" == opensagetv-vibe-logo || "$repository" == opensagetv-vibe-android-client ]]; then
     branch=main
   fi
   target="$workspace/$repository"

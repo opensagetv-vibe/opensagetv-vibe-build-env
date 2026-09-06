@@ -17,6 +17,7 @@ SOURCES = {
     "container": "https://github.com/opensagetv-vibe/opensagetv-vibe-container.git",
     "ffmpeg_mim": "https://github.com/opensagetv-vibe/opensagetv-vibe-ffmpeg-mim.git",
     "xmltv_import": "https://github.com/opensagetv-vibe/opensagetv-vibe-xmltv-import.git",
+    "logo": "https://github.com/opensagetv-vibe/opensagetv-vibe-logo.git",
     "android_client": "https://github.com/opensagetv-vibe/opensagetv-vibe-android-client.git",
 }
 
@@ -101,6 +102,8 @@ def main():
     parser.add_argument("--release-dir", required=True)
     parser.add_argument("--production-image", required=True)
     parser.add_argument("--debug-image", required=True)
+    parser.add_argument("--production-export-id", required=True)
+    parser.add_argument("--debug-export-id", required=True)
     parser.add_argument("--build-image", required=True)
     parser.add_argument("--repo", action="append", nargs=2, metavar=("NAME", "PATH"), required=True)
     parser.add_argument("--opendct-status", required=True)
@@ -119,10 +122,21 @@ def main():
             "dirty": repository_is_dirty(path),
         }
 
-    def image_record(reference):
+    def image_record(reference, exported_config_id=None):
         image_id = command("docker", "image", "inspect", reference, "--format", "{{.Id}}")
         size = int(command("docker", "image", "inspect", reference, "--format", "{{.Size}}"))
-        return {"reference": reference, "image_id": image_id, "size": size, "platform": "linux/amd64"}
+        record = {
+            "reference": reference,
+            "image_id": image_id,
+            "local_image_store_id": image_id,
+            "size": size,
+            "platform": "linux/amd64",
+        }
+        if exported_config_id is not None:
+            if not re.fullmatch(r"sha256:[0-9a-f]{64}", exported_config_id):
+                raise ValueError(f"invalid exported image config ID: {exported_config_id!r}")
+            record["exported_archive_config_id"] = exported_config_id
+        return record
 
     release_dir = pathlib.Path(args.release_dir)
     runtime_log = pathlib.Path(args.runtime_validation_log).read_text(errors="replace")
@@ -165,8 +179,8 @@ def main():
         "repositories": repositories,
         "images": {
             "development": image_record(args.build_image),
-            "production": image_record(args.production_image),
-            "debug": image_record(args.debug_image),
+            "production": image_record(args.production_image, args.production_export_id),
+            "debug": image_record(args.debug_image, args.debug_export_id),
         },
         "toolchains": {
             "build_environment": os.environ.get("OPENSAGETV_VIBE_BUILD_ENV_VERSION", "unknown"),

@@ -7,6 +7,7 @@ core=/work/sagetv
 fm=/project
 xmltv=/workspace/xmltv-import
 container=/workspace/container
+logo=/workspace/logo
 android=/workspace/android-client
 manifest=/workspace/release-manifest
 production_image="${OPENSAGETV_VIBE_SERVER_IMAGE:-ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11}"
@@ -28,16 +29,27 @@ validate_environment() {
   test -x /opt/java/jdk8/bin/java
   test -x /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager
   test -x /opt/android-sdk/platform-tools/adb
+  test -s "${BUNDLETOOL_JAR:?BUNDLETOOL_JAR is not configured}"
+  test "$(/opt/java/jdk17/bin/java -jar "$BUNDLETOOL_JAR" version)" = 1.18.3
   for package in \
     build-tools/29.0.2 build-tools/36.0.0 \
     platforms/android-29 platforms/android-36 ndk/21.0.6113669; do
     test -d "/opt/android-sdk/$package"
   done
   test -x /opt/opensagetv-vibe/android-python/bin/python3
+  test -x /opt/opensagetv-vibe/logo-python/bin/python3
+  test -f "$logo/scripts/logo_pipeline.py"
+  /opt/opensagetv-vibe/logo-python/bin/python3 -c 'import cairosvg, PIL'
   test -f "$android/dev.sh"
   test -f "$android/docker/entrypoint.sh"
   test -f "$android/source/dev/gradlew"
   command -v docker >/dev/null
+  docker buildx version >/dev/null
+  command -v smbclient >/dev/null
+  command -v ccache >/dev/null
+  for command in ffmpeg ffprobe dvdauthor spumux spuunmux convert identify fc-match; do
+    command -v "$command" >/dev/null
+  done
   test -S /var/run/docker.sock
   docker info >/dev/null
 }
@@ -53,6 +65,7 @@ android_environment() {
     SAGETV_EXISTING_SOURCE="$android/source/existing" \
     SAGETV_MCP_CONFIG="$android/config/firetv.toml" \
     SAGETV_ARTIFACT_DIR="$android/artifacts/firetv" \
+    OPENSAGETV_VIBE_BUILD_ENV_ROOT="$manifest" \
     PYTHONPATH="$android/mcp/src" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -60,7 +73,25 @@ android_environment() {
     "$@"
 }
 
+logo_environment() {
+  env \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/opensagetv-vibe/logo-python/bin:$PATH" \
+    "$@"
+}
+
+logo_pipeline() {
+  logo_environment /opt/opensagetv-vibe/logo-python/bin/python3 \
+    "$logo/scripts/logo_pipeline.py" "$@" --android-root "$android"
+}
+
+logo_build_install() {
+  logo_pipeline all
+}
+
 android_prepare() {
+  logo_build_install
   android_environment python3 "$android/scripts/repair_dev_gradle.py" --workspace "$android"
 }
 
@@ -79,6 +110,13 @@ android_info() {
   android_environment /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --list_installed \
     | grep -E '^(  )?(build-tools;29\.0\.2|build-tools;36\.0\.0|ndk;21\.0\.6113669|platform-tools|platforms;android-(29|36))([[:space:]]|$)'
   /opt/android-sdk/platform-tools/adb version | head -2
+  echo "android_bundletool=$(/opt/java/jdk17/bin/java -jar "$BUNDLETOOL_JAR" version)"
+  echo "smbclient=$(smbclient --version)"
+  echo "dvd_authoring_dvdauthor=$(dvdauthor --version 2>&1 | head -1)"
+  echo "dvd_authoring_spumux=$(spumux --version 2>&1 | head -1)"
+  echo "dvd_authoring_imagemagick=$(convert -version 2>&1 | head -1)"
+  echo "dvd_authoring_font=$(fc-match 'DejaVu Sans' | head -1)"
+  logo_environment python3 -c 'import importlib.metadata as m; print("logo_cairosvg=" + m.version("CairoSVG")); print("logo_pillow=" + m.version("Pillow"))'
   android_environment python3 -c 'import importlib.metadata as m; import mcp; print("android_mcp=" + m.version("mcp"))'
   echo 'android_toolchain=PASS'
 }
@@ -90,8 +128,12 @@ run_android_suite() {
     android_command test
     android_command validate
     android_command build
+    android_command bundle
     test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk"
     test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk.sha256"
+    test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.aab"
+    test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apks"
+    test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-release-candidate.aab"
     echo 'ANDROID CLIENT SUITE PASSED'
   } | tee "$manifest/output/test-results/android-client.log"
 }
@@ -102,7 +144,13 @@ android_clean() {
   fi
   rm -f \
     "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk" \
-    "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk.sha256"
+    "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk.sha256" \
+    "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.aab" \
+    "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.aab.sha256" \
+    "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apks" \
+    "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apks.sha256" \
+    "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-release-candidate.aab" \
+    "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-release-candidate.aab.sha256"
 }
 
 ffmpeg_target() {
@@ -144,6 +192,23 @@ runtime_images() {
     bash "$container/build.sh"
 }
 
+runtime_image_status() {
+  local expected installed installed_debug
+  expected="$(bash "$container/scripts/runtime-environment-fingerprint.sh")"
+  installed="$(docker image inspect "$production_image" \
+    --format '{{index .Config.Labels "org.opensagetv.vibe.runtime-environment.fingerprint"}}' 2>/dev/null || true)"
+  installed_debug="$(docker image inspect "$debug_image" \
+    --format '{{index .Config.Labels "org.opensagetv.vibe.runtime-environment.fingerprint"}}' 2>/dev/null || true)"
+  echo "expected_runtime_environment_fingerprint=$expected"
+  echo "installed_runtime_environment_fingerprint=${installed:-missing}"
+  echo "installed_debug_runtime_environment_fingerprint=${installed_debug:-missing}"
+  if [[ "$expected" == "$installed" && "$expected" == "$installed_debug" ]]; then
+    echo 'runtime_image_rebuild_needed=false'
+  else
+    echo 'runtime_image_rebuild_needed=true'
+  fi
+}
+
 runtime_test() {
   mkdir -p "$manifest/output/test-results"
   env \
@@ -156,10 +221,34 @@ runtime_test() {
     bash "$container/tests/runtime-validation.sh" | tee "$manifest/output/test-results/runtime-validation.log"
 }
 
+runtime_update_package() {
+  local component="${1:?component required: core, mim, xmltv, or comskip}"
+  env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
+    bash "$container/scripts/create-component-update.sh" \
+      "$component" "$container/output/component-updates"
+}
+
+runtime_update_test() {
+  local component="${1:-all}"
+  if [[ "$component" == all ]]; then
+    for item in core mim xmltv comskip; do
+      env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
+        bash "$container/scripts/test-component.sh" "$item"
+    done
+    env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
+      bash "$container/tests/component-update-selftest.sh"
+  else
+    env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
+      bash "$container/scripts/test-component.sh" "$component"
+    [[ "$component" != mim ]] || env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
+      bash "$container/tests/component-update-selftest.sh"
+  fi
+}
+
 release_package() {
   env \
     CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" CONTAINER_SOURCE="$container" \
-    ANDROID_SOURCE="$android" \
+    LOGO_SOURCE="$logo" ANDROID_SOURCE="$android" \
     OPENSAGETV_VIBE_SERVER_IMAGE="$production_image" \
     OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE="$debug_image" \
     bash "$manifest/scripts/package-release.sh"
@@ -237,6 +326,18 @@ run_runtime_all() {
   release_package
 }
 
+configure_safe_directories() {
+  local path
+  for path in "$core" "$fm" "$xmltv" "$container" "$logo" "$android" "$manifest"; do
+    [[ -d "$path/.git" ]] || continue
+    if ! git config --global --get-all safe.directory 2>/dev/null | grep -Fqx "$path"; then
+      git config --global --add safe.directory "$path"
+    fi
+  done
+}
+
+configure_safe_directories
+
 case "$cmd" in
   core) cd "$core"; exec bash tests/linux-modern/all.sh "$@" ;;
   ffmpeg-linux) ffmpeg_target linux-x64 linux64 ;;
@@ -257,21 +358,44 @@ case "$cmd" in
     ;;
   test-mim) run_mim_suite ;;
   xmltv) cd "$xmltv"; exec bash scripts/build.sh ;;
+  logo-info)
+    validate_environment
+    logo_environment python3 -c 'import importlib.metadata as m; print("cairosvg=" + m.version("CairoSVG")); print("pillow=" + m.version("Pillow"))'
+    test "$(find "$logo/M_PLUS_Rounded_1c" -maxdepth 1 -type f -name '*.ttf' | wc -l)" = 7
+    fc-scan --format 'logo_font=%{family}\n' \
+      "$logo/M_PLUS_Rounded_1c/MPLUSRounded1c-ExtraBold.ttf" | head -1
+    echo 'logo_toolchain=PASS'
+    ;;
+  logo-test)
+    logo_environment python3 -m unittest discover -s "$logo/tests" -p 'test_*.py' -v
+    ;;
+  logo-validate) logo_pipeline validate ;;
+  logo-build) logo_pipeline build ;;
+  logo-install) logo_pipeline install ;;
+  logo-all)
+    logo_environment python3 -m unittest discover -s "$logo/tests" -p 'test_*.py' -v
+    logo_build_install
+    ;;
   android-info) android_info ;;
   android-test) android_prepare; android_command test "$@" ;;
   android-validate) android_prepare; android_command validate "$@" ;;
   android-build) android_prepare; android_command build "$@" ;;
+  android-bundle) android_prepare; android_command bundle "$@" ;;
+  android-bundle-install) android_command bundle-install "$@" ;;
   android-all) run_android_suite ;;
   android-mcp) android_command mcp "$@" ;;
   runtime-stage) runtime_stage ;;
   runtime-images) runtime_images ;;
+  runtime-image-status) runtime_image_status ;;
   runtime-test) runtime_test ;;
+  runtime-update-package) runtime_update_package "$@" ;;
+  runtime-update-test) runtime_update_test "$@" ;;
   release) release_package ;;
   runtime-all) run_runtime_all ;;
   clean)
     cd "$core"; bash tests/linux-modern/clean.sh
     android_clean
-    rm -rf "$fm/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$container/artifacts"
+    rm -rf "$fm/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$container/artifacts" "$logo/generated"
     echo 'Build outputs cleaned; reusable container, cache, and release images retained'
     ;;
   all)
@@ -284,7 +408,7 @@ case "$cmd" in
     run_stage 'FFmpeg/MIM Windows x64 build' ffmpeg_target windows-x64 win64
     run_stage 'MIM lifecycle and media-integrity tests' run_mim_suite
     run_stage 'XMLTV compile, regression tests, and package' bash -c "cd '$xmltv' && bash scripts/build.sh"
-    run_stage 'Android client tests, validation, and deterministic APK build' run_android_suite
+    run_stage 'Android client tests, validation, deterministic APK/AAB builds, and bundletool checks' run_android_suite
     run_stage 'Runtime artifact staging and integrity' runtime_stage
     run_stage 'Production and debug runtime image builds' runtime_images
     run_stage 'Clean runtime, restart soak, discovery, XMLTV, OpenDCT, and cleanup validation' runtime_test
@@ -296,6 +420,6 @@ case "$cmd" in
     ;;
   shell) exec bash "$@" ;;
   help|*)
-    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv android-info android-test android-validate android-build android-all android-mcp runtime-stage runtime-images runtime-test release runtime-all clean shell'
+    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
     ;;
 esac
