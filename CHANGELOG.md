@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added the standalone TMDB plugin ZIP, service/dependency JARs, durable docs,
+  source revision, and package version to unified release assembly. The
+  release-artifact SPDX document now covers the exact staged TMDB files.
 - Added `opensagetv-vibe-tmdb` as the tenth unified component with a dedicated
   bind mount, checkout identity, root commands, clean handling, checkout
   reconstruction, and complete workspace handoff coverage. The installed image

@@ -254,8 +254,9 @@ runtime_update_test() {
 
 release_package() {
   env \
-    CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" CONTAINER_SOURCE="$container" \
-    LOGO_SOURCE="$logo" ANDROID_SOURCE="$android" \
+    CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
+    CONTAINER_SOURCE="$container" LOGO_SOURCE="$logo" ANDROID_SOURCE="$android" \
+    SAGEMC_SOURCE="$sagemc" \
     OPENSAGETV_VIBE_SERVER_IMAGE="$production_image" \
     OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE="$debug_image" \
     bash "$manifest/scripts/package-release.sh"

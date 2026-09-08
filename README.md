@@ -258,7 +258,7 @@ output/releases/opensagetv-vibe-9.2.10-u26-j11/
 ```
 
 The release directory contains Core, Linux/Windows FFmpeg/MIM, XMLTV, the
-Android debug APK and test evidence, the CA
+standalone TMDB plugin ZIP and dependency JARs, the Android debug APK and test evidence, the CA
 template, separated build/container documentation, two compressed Docker image
 archives, SPDX SBOMs, exact commits/image IDs/artifact hashes, and a release
 checksum file.

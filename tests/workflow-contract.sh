@@ -63,3 +63,11 @@ grep -Fq 'ADB_VENDOR_KEYS="$android/adb/adbkey"' "$build_env/scripts/dev-entrypo
 echo 'PASS: Android device authorization survives reusable-container recreation'
 
 echo 'PASS: all OpenSageTV Vibe repositories share the root workflow contract'
+
+grep -Fq 'components/tmdb' "$build_env/scripts/package-release.sh"
+grep -Fq 'OpenSageTVVibeTMDB-plugin.zip' "$build_env/scripts/package-release.sh"
+grep -Fq -- '--repo tmdb "$tmdb"' "$build_env/scripts/package-release.sh"
+grep -Fq -- '--tmdb-version-file "$tmdb/release.properties"' "$build_env/scripts/package-release.sh"
+grep -Fq '"tmdb": "https://github.com/opensagetv-vibe/opensagetv-vibe-tmdb.git"' \
+  "$build_env/scripts/generate-release-manifest.py"
+echo 'PASS: unified release stages and records the standalone TMDB component'

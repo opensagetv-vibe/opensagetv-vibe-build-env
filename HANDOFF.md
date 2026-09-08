@@ -117,6 +117,8 @@ Passed stages:
 - FFmpeg 9.0.1/MIM 0.4.5 Linux and Windows builds.
 - Completed/growing/join/repeated-switch MIM A/V and teardown tests.
 - XMLTV 3.5 build and complete regression suite.
+- Standalone TMDB plugin build, shared SageMC/XMLTV consumer stress, release
+  artifact staging, exact source/version provenance, and SPDX coverage.
 - Android v0.5.75 tests, validator, and deterministic Dev APK build.
 - Exact runtime artifact staging.
 - Ubuntu 26.04/OpenJDK 11 production and debug runtime image builds.

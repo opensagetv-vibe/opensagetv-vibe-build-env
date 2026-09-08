@@ -17,6 +17,7 @@ SOURCES = {
     "container": "https://github.com/opensagetv-vibe/opensagetv-vibe-container.git",
     "ffmpeg_mim": "https://github.com/opensagetv-vibe/opensagetv-vibe-ffmpeg-mim.git",
     "xmltv_import": "https://github.com/opensagetv-vibe/opensagetv-vibe-xmltv-import.git",
+    "tmdb": "https://github.com/opensagetv-vibe/opensagetv-vibe-tmdb.git",
     "logo": "https://github.com/opensagetv-vibe/opensagetv-vibe-logo.git",
     "android_client": "https://github.com/opensagetv-vibe/opensagetv-vibe-android-client.git",
     "sagemc": "https://github.com/opensagetv-vibe/opensagetv-vibe-sagemc.git",
@@ -112,6 +113,7 @@ def main():
     parser.add_argument("--android-test-log", required=True)
     parser.add_argument("--android-version-file", required=True)
     parser.add_argument("--sagemc-version-file", required=True)
+    parser.add_argument("--tmdb-version-file", required=True)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
@@ -151,6 +153,17 @@ def main():
     sagemc_version = pathlib.Path(args.sagemc_version_file).read_text().strip()
     if not re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}", sagemc_version):
         raise ValueError(f"invalid SageMC version: {sagemc_version!r}")
+    tmdb_properties = pathlib.Path(args.tmdb_version_file).read_text().splitlines()
+    tmdb_versions = [
+        line.partition("=")[2].strip()
+        for line in tmdb_properties
+        if line.partition("=")[0].strip() == "VERSION"
+    ]
+    if len(tmdb_versions) != 1 or not re.fullmatch(
+        r"[0-9]+(?:\.[0-9]+){1,3}(?:-[0-9A-Za-z.-]+)?", tmdb_versions[0]
+    ):
+        raise ValueError(f"invalid TMDB VERSION in {args.tmdb_version_file!r}")
+    tmdb_version = tmdb_versions[0]
     restart_match = re.search(
         r"^RUNTIME RESTART SOAK PASSED: supervisor restart \+ (\d+) container restarts$",
         runtime_log,
@@ -179,6 +192,7 @@ def main():
             "ffmpeg": "n9.0.1",
             "mim": "0.4.5",
             "xmltv_import": "3.5",
+            "tmdb": tmdb_version,
             "android_client": android_version,
             "sagemc": sagemc_version,
         },
