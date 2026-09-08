@@ -21,6 +21,7 @@ $order=@(
   'opensagetv-vibe-xmltv-import',
   'opensagetv-vibe-logo',
   'opensagetv-vibe-android-client',
+  'opensagetv-vibe-sagemc',
   'opensagetv-vibe-container',
   'opensagetv-vibe-archive'
 )

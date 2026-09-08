@@ -4,6 +4,8 @@
 *.tar
 *.tar.zst
 *.zip
+__pycache__/
+*.pyc
 /artifacts/*
 !/artifacts/downloads/
 /artifacts/downloads/*

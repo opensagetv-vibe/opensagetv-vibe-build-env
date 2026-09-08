@@ -9,6 +9,7 @@ xmltv=/workspace/xmltv-import
 container=/workspace/container
 logo=/workspace/logo
 android=/workspace/android-client
+sagemc=/workspace/sagemc
 manifest=/workspace/release-manifest
 production_image="${OPENSAGETV_VIBE_SERVER_IMAGE:-ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11}"
 debug_image="${OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE:-ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11-debug}"
@@ -43,6 +44,7 @@ validate_environment() {
   test -f "$android/dev.sh"
   test -f "$android/docker/entrypoint.sh"
   test -f "$android/source/dev/gradlew"
+  test -f "$sagemc/source/dev/SageMC_169.xml"
   command -v docker >/dev/null
   docker buildx version >/dev/null
   command -v smbclient >/dev/null
@@ -60,6 +62,7 @@ android_environment() {
     JDK_HOME=/opt/java/jdk17 \
     GRADLE_USER_HOME=/work/.gradle/android \
     ANDROID_USER_HOME="$android/adb" \
+    ADB_VENDOR_KEYS="$android/adb/adbkey" \
     SAGETV_WORKSPACE="$android" \
     SAGETV_DEV_SOURCE="$android/source/dev" \
     SAGETV_EXISTING_SOURCE="$android/source/existing" \
@@ -384,6 +387,14 @@ case "$cmd" in
   android-bundle-install) android_command bundle-install "$@" ;;
   android-all) run_android_suite ;;
   android-mcp) android_command mcp "$@" ;;
+  sagemc-test) cd "$sagemc"; exec env SAGETV_CORE_ROOT="$core" bash scripts/test.sh "$@" ;;
+  sagemc-validate) cd "$sagemc"; exec env SAGETV_CORE_ROOT="$core" bash scripts/validate.sh "$@" ;;
+  sagemc-build) cd "$sagemc"; exec env SAGETV_CORE_ROOT="$core" bash scripts/build.sh "$@" ;;
+  sagemc-all)
+    cd "$sagemc"
+    env SAGETV_CORE_ROOT="$core" bash scripts/test.sh "$@"
+    env SAGETV_CORE_ROOT="$core" bash scripts/build.sh "$@"
+    ;;
   runtime-stage) runtime_stage ;;
   runtime-images) runtime_images ;;
   runtime-image-status) runtime_image_status ;;
@@ -395,7 +406,7 @@ case "$cmd" in
   clean)
     cd "$core"; bash tests/linux-modern/clean.sh
     android_clean
-    rm -rf "$fm/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$container/artifacts" "$logo/generated"
+    rm -rf "$fm/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$container/artifacts" "$logo/generated" "$sagemc/output"
     echo 'Build outputs cleaned; reusable container, cache, and release images retained'
     ;;
   all)
@@ -408,6 +419,7 @@ case "$cmd" in
     run_stage 'FFmpeg/MIM Windows x64 build' ffmpeg_target windows-x64 win64
     run_stage 'MIM lifecycle and media-integrity tests' run_mim_suite
     run_stage 'XMLTV compile, regression tests, and package' bash -c "cd '$xmltv' && bash scripts/build.sh"
+    run_stage 'SageMC Studio graph tests, validation, and package' bash -c "cd '$sagemc' && SAGETV_CORE_ROOT='$core' bash scripts/test.sh && SAGETV_CORE_ROOT='$core' bash scripts/build.sh"
     run_stage 'Android client tests, validation, deterministic APK/AAB builds, and bundletool checks' run_android_suite
     run_stage 'Runtime artifact staging and integrity' runtime_stage
     run_stage 'Production and debug runtime image builds' runtime_images
@@ -420,6 +432,6 @@ case "$cmd" in
     ;;
   shell) exec bash "$@" ;;
   help|*)
-    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
+    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
     ;;
 esac

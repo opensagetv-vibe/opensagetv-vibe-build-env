@@ -36,7 +36,7 @@ build, and install using state under `artifacts/update_runner`.
 current documentation and workflow files. Never place credentials, appdata,
 recordings, private signing keys, or generated build output in a handoff ZIP.
 
-From this repository, `create_workspace_handoff_zip.cmd` creates all eight
+From this repository, `create_workspace_handoff_zip.cmd` creates all nine
 component packages plus one workspace bundle. Its included
 `APPLY_WORKSPACE_HANDOFF.cmd` verifies and applies each package, then runs the
 same resumable test/validate/build/install gates in dependency order.

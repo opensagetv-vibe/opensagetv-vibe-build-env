@@ -3,6 +3,8 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; projects="$(cd "$root/.." && pwd)"
 android_project="${OPENSAGETV_VIBE_ANDROID_PROJECT_ROOT:-$projects/opensagetv-vibe-android-client}"
 android_project="$(cd "$android_project" && pwd)"
+sagemc_project="${OPENSAGETV_VIBE_SAGEMC_PROJECT_ROOT:-$projects/opensagetv-vibe-sagemc}"
+sagemc_project="$(cd "$sagemc_project" && pwd)"
 image="${OPENSAGETV_VIBE_BUILD_IMAGE:-opensagetv-vibe-build-env:u26-j11}"
 container="${OPENSAGETV_VIBE_DEV_CONTAINER:-opensagetv-vibe-dev}"
 ffmpeg_commit="${OPENSAGETV_VIBE_FFMPEG_COMMIT:-bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa}"
@@ -32,6 +34,7 @@ workspace_id() {
 }
 projects_id="$(workspace_id "$projects")"
 android_project_id="$(workspace_id "$android_project")"
+sagemc_project_id="$(workspace_id "$sagemc_project")"
 
 image_build() {
   docker buildx build --load --progress=plain \
@@ -58,7 +61,7 @@ container_remove() {
 }
 container_ensure() {
   image_ensure
-  local desired_image current_image current_projects current_android running
+  local desired_image current_image current_projects current_android current_sagemc running
   desired_image="$(docker image inspect "$image" --format '{{.Id}}')"
   if docker container inspect "$container" >/dev/null 2>&1; then
     current_image="$(docker inspect "$container" --format '{{.Image}}')"
@@ -75,6 +78,12 @@ container_ensure() {
         if [[ "$current_android" != "$android_project_id" ]]; then
           echo "Recreating $container because the active Android checkout changed."
           container_remove
+        else
+          current_sagemc="$(docker inspect "$container" --format '{{index .Config.Labels "org.opensagetv.vibe.sagemc-project-root"}}')"
+          if [[ "$current_sagemc" != "$sagemc_project_id" ]]; then
+            echo "Recreating $container because the active SageMC checkout changed."
+            container_remove
+          fi
         fi
       fi
     fi
@@ -84,6 +93,7 @@ container_ensure() {
       --label org.opensagetv.vibe.role=unified-dev \
       --label "org.opensagetv.vibe.projects-root=$projects_id" \
       --label "org.opensagetv.vibe.android-project-root=$android_project_id" \
+      --label "org.opensagetv.vibe.sagemc-project-root=$sagemc_project_id" \
       --entrypoint sleep \
       -v opensagetv-vibe-gradle-cache:/work/.gradle \
       -v opensagetv-vibe-ccache:/work/.ccache \
@@ -93,6 +103,7 @@ container_ensure() {
       -v "$projects/opensagetv-vibe-container:/workspace/container" \
       -v "$projects/opensagetv-vibe-logo:/workspace/logo" \
       -v "$android_project:/workspace/android-client" \
+      -v "$sagemc_project:/workspace/sagemc" \
       -v "$root:/workspace/release-manifest" \
       -v /var/run/docker.sock:/var/run/docker.sock \
       "$image" infinity >/dev/null
@@ -121,7 +132,7 @@ case "$cmd" in
     ;;
   remove-dev) container_remove ;;
   shell) container_ensure; exec docker exec -it "$container" bash "$@" ;;
-  all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
+  all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
     container_ensure
     # Run the bind-mounted controller so orchestration changes do not require
     # rebuilding the dependency image.
@@ -137,7 +148,7 @@ case "$cmd" in
       bash /workspace/release-manifest/scripts/dev-entrypoint.sh "$cmd" "$@"
     ;;
   *)
-    echo "Usage: $0 {image|start|stop|remove-dev|all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean|shell}" >&2
+    echo "Usage: $0 {image|start|stop|remove-dev|all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean|shell}" >&2
     exit 2
     ;;
 esac

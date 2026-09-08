@@ -8,6 +8,7 @@ xmltv="${XMLTV_SOURCE:-/workspace/xmltv-import}"
 container="${CONTAINER_SOURCE:-/workspace/container}"
 logo="${LOGO_SOURCE:-/workspace/logo}"
 android="${ANDROID_SOURCE:-/workspace/android-client}"
+sagemc="${SAGEMC_SOURCE:-/workspace/sagemc}"
 release_id="${OPENSAGETV_VIBE_RELEASE_ID:-opensagetv-vibe-9.2.10-u26-j11}"
 production_image="${OPENSAGETV_VIBE_SERVER_IMAGE:-ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11}"
 debug_image="${OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE:-ghcr.io/opensagetv-vibe/opensagetv-vibe-server:u26-gpu-j11-debug}"
@@ -28,6 +29,8 @@ test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk"
 test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.aab"
 test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-release-candidate.aab"
 test -s "$android/VERSION"
+test -s "$sagemc/output/OpenSageTV-Vibe-SageMC-v$(cat "$sagemc/VERSION")-offline.zip"
+test -s "$sagemc/output/OpenSageTV-Vibe-SageMC-v$(cat "$sagemc/VERSION")-stv.zip"
 test -s "$opendct_status"
 test -s "$runtime_validation_log"
 test -s "$android_test_log"
@@ -48,9 +51,10 @@ mkdir -p \
   "$release_dir/components/ffmpeg-mim/windows-x64" \
   "$release_dir/components/xmltv" \
   "$release_dir/components/android-client" \
+  "$release_dir/components/sagemc" \
   "$release_dir/images" "$release_dir/sbom" \
   "$release_dir/test-results" \
-  "$release_dir/docs/build-env" "$release_dir/docs/container" "$release_dir/docs/android-client" \
+  "$release_dir/docs/build-env" "$release_dir/docs/container" "$release_dir/docs/android-client" "$release_dir/docs/sagemc" \
   "$package_dir"
 
 cp "$core/output/packages/sagetv-server-x86_64.tar.gz" "$release_dir/components/core/"
@@ -69,6 +73,10 @@ cp "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.aab" \
 cp -a "$android/artifacts/reports/bundletool-"* \
   "$release_dir/components/android-client/"
 cp "$android/VERSION" "$release_dir/components/android-client/VERSION"
+cp "$sagemc/output/OpenSageTV-Vibe-SageMC-v$(cat "$sagemc/VERSION")-offline.zip" \
+  "$sagemc/output/OpenSageTV-Vibe-SageMC-v$(cat "$sagemc/VERSION")-stv.zip" \
+  "$sagemc/output/build-manifest.json" "$release_dir/components/sagemc/"
+cp "$sagemc/VERSION" "$release_dir/components/sagemc/VERSION"
 cp "$runtime_validation_log" "$release_dir/test-results/runtime-validation.log"
 cp "$android_test_log" "$release_dir/test-results/android-client.log"
 cp "$container/unRAID/opensagetv-vibe/sagetv-vibe-server-u26-gpu-j11.xml" "$release_dir/"
@@ -80,6 +88,9 @@ cp "$manifest_root/README.md" "$manifest_root/BUILDING.md" \
 cp "$android/README.md" "$android/HANDOFF.md" "$android/CHANGELOG.md" \
   "$android/MIGRATION_TO_OPENSAGETV_VIBE.md" \
   "$release_dir/docs/android-client/"
+cp "$sagemc/README.md" "$sagemc/HANDOFF.md" "$sagemc/CHANGELOG.md" \
+  "$sagemc/docs/ARCHITECTURE.md" "$sagemc/docs/UPSTREAM_PROVENANCE.md" \
+  "$release_dir/docs/sagemc/"
 
 production_archive="$release_dir/images/opensagetv-vibe-server-u26-gpu-j11.tar.gz"
 debug_archive="$release_dir/images/opensagetv-vibe-server-u26-gpu-j11-debug.tar.gz"
@@ -143,10 +154,12 @@ python3 "$manifest_root/scripts/generate-release-manifest.py" \
   --repo xmltv_import "$xmltv" \
   --repo logo "$logo" \
   --repo android_client "$android" \
+  --repo sagemc "$sagemc" \
   --opendct-status "$opendct_status" \
   --runtime-validation-log "$runtime_validation_log" \
   --android-test-log "$android_test_log" \
   --android-version-file "$android/VERSION" \
+  --sagemc-version-file "$sagemc/VERSION" \
   --output "$release_dir/release-manifest.json"
 
 cat > "$release_dir/RELEASE_REPORT.md" <<EOF

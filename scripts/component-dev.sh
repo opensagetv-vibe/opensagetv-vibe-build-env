@@ -42,7 +42,7 @@ artifact_only_install() {
 # unified command so Windows users do not need to know a second script name.
 if [[ "$project" == opensagetv-vibe-build-env ]]; then
   case "$command" in
-    image|start|stop|remove-dev|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
+    image|start|stop|remove-dev|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
       exec "$unified" "$command" "$@"
       ;;
   esac
@@ -84,6 +84,13 @@ case "$project:$command" in
     ;;
   opensagetv-vibe-xmltv-import:build) exec "$unified" xmltv "$@" ;;
   opensagetv-vibe-xmltv-import:install) artifact_only_install ;;
+
+  opensagetv-vibe-sagemc:test) exec "$unified" sagemc-test "$@" ;;
+  opensagetv-vibe-sagemc:validate) exec "$unified" sagemc-validate "$@" ;;
+  opensagetv-vibe-sagemc:build) exec "$unified" sagemc-build "$@" ;;
+  opensagetv-vibe-sagemc:install)
+    echo 'SKIPPED: run dev.cmd install on the commissioned Windows host for guarded Vibe-test SMB installation.'
+    ;;
 
   opensagetv-vibe-logo:test)
     syntax_check

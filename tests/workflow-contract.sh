@@ -11,6 +11,7 @@ repos=(
   opensagetv-vibe-xmltv-import
   opensagetv-vibe-logo
   opensagetv-vibe-android-client
+  opensagetv-vibe-sagemc
   opensagetv-vibe-archive
 )
 required=(
@@ -26,9 +27,9 @@ for repo in "${repos[@]}"; do
   for path in "${required[@]}"; do
     [[ -f "$root/$path" ]] || { echo "ERROR: $repo lacks $path" >&2; exit 1; }
   done
-  grep -Eq '^VERSION=[^[:space:]]+$' "$root/release.properties"
-  grep -Eq '^PACKAGE_ID=[^[:space:]]+$' "$root/release.properties"
-  grep -Eq '^REQUIRES_BUILD=(true|false)$' "$root/release.properties"
+  tr -d '\r' < "$root/release.properties" | grep -Eq '^VERSION=[^[:space:]]+$'
+  tr -d '\r' < "$root/release.properties" | grep -Eq '^PACKAGE_ID=[^[:space:]]+$'
+  tr -d '\r' < "$root/release.properties" | grep -Eq '^REQUIRES_BUILD=(true|false)$'
   [[ ! -e "$root/TASK_CODEX.md" ]] || { echo "ERROR: obsolete task list remains in $repo" >&2; exit 1; }
   [[ ! -e "$root/ChangeLog.txt" ]] || { echo "ERROR: legacy version text remains in $repo" >&2; exit 1; }
   grep -Fq -- '-ProjectRoot "%~dp0."' "$root/create_ai_handoff_zip.cmd" || {
@@ -56,5 +57,8 @@ grep -Fq 'COPY --from=logo_src requirements.lock' "$build_env/Dockerfile"
 grep -Fq 'OPENSAGETV_VIBE_LOGO_PYTHON=' "$build_env/Dockerfile"
 grep -Fq 'logo_build_install' "$build_env/scripts/dev-entrypoint.sh"
 echo 'PASS: unified image owns deterministic logo generation and Android synchronization'
+
+grep -Fq 'ADB_VENDOR_KEYS="$android/adb/adbkey"' "$build_env/scripts/dev-entrypoint.sh"
+echo 'PASS: Android device authorization survives reusable-container recreation'
 
 echo 'PASS: all OpenSageTV Vibe repositories share the root workflow contract'

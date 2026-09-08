@@ -16,6 +16,7 @@ $repositories = [ordered]@{
   'opensagetv-vibe-xmltv-import' = 'ubuntu26-modern-build'
   'opensagetv-vibe-logo' = 'main'
   'opensagetv-vibe-android-client' = 'main'
+  'opensagetv-vibe-sagemc' = 'main'
   'opensagetv-vibe-archive' = 'main'
 }
 $manifestNames = @{
@@ -26,6 +27,7 @@ $manifestNames = @{
   'opensagetv-vibe-xmltv-import' = 'xmltv_import'
   'opensagetv-vibe-logo' = 'logo'
   'opensagetv-vibe-android-client' = 'android_client'
+  'opensagetv-vibe-sagemc' = 'sagemc'
 }
 $manifest = $null
 if ($ResolvedManifest) {

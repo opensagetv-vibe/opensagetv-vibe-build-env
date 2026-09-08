@@ -19,6 +19,7 @@ SOURCES = {
     "xmltv_import": "https://github.com/opensagetv-vibe/opensagetv-vibe-xmltv-import.git",
     "logo": "https://github.com/opensagetv-vibe/opensagetv-vibe-logo.git",
     "android_client": "https://github.com/opensagetv-vibe/opensagetv-vibe-android-client.git",
+    "sagemc": "https://github.com/opensagetv-vibe/opensagetv-vibe-sagemc.git",
 }
 
 
@@ -110,6 +111,7 @@ def main():
     parser.add_argument("--runtime-validation-log", required=True)
     parser.add_argument("--android-test-log", required=True)
     parser.add_argument("--android-version-file", required=True)
+    parser.add_argument("--sagemc-version-file", required=True)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
@@ -146,6 +148,9 @@ def main():
     android_version = pathlib.Path(args.android_version_file).read_text().strip()
     if not re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}", android_version):
         raise ValueError(f"invalid Android client version: {android_version!r}")
+    sagemc_version = pathlib.Path(args.sagemc_version_file).read_text().strip()
+    if not re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}", sagemc_version):
+        raise ValueError(f"invalid SageMC version: {sagemc_version!r}")
     restart_match = re.search(
         r"^RUNTIME RESTART SOAK PASSED: supervisor restart \+ (\d+) container restarts$",
         runtime_log,
@@ -175,6 +180,7 @@ def main():
             "mim": "0.4.5",
             "xmltv_import": "3.5",
             "android_client": android_version,
+            "sagemc": sagemc_version,
         },
         "repositories": repositories,
         "images": {

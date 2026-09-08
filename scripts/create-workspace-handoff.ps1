@@ -8,7 +8,8 @@ $repos=@(
   'opensagetv-vibe-build-env','opensagetv-vibe-core','opensagetv-vibe-container',
   'opensagetv-vibe-ffmpeg-mim','opensagetv-vibe-xmltv-import',
   'opensagetv-vibe-logo',
-  'opensagetv-vibe-android-client','opensagetv-vibe-archive'
+  'opensagetv-vibe-android-client','opensagetv-vibe-sagemc',
+  'opensagetv-vibe-archive'
 )
 $stage=Join-Path ([IO.Path]::GetTempPath()) ('vibe-workspace-handoff-'+[guid]::NewGuid().ToString('N'))
 $out=Join-Path $buildEnv 'artifacts\downloads'
@@ -42,7 +43,7 @@ exit /b %ERRORLEVEL%
   @'
 # OpenSageTV Vibe workspace handoff
 
-Extract this bundle beside the eight existing `opensagetv-vibe-*` Git
+Extract this bundle beside the nine existing `opensagetv-vibe-*` Git
 checkouts. Run `APPLY_WORKSPACE_HANDOFF.cmd` with no argument when the extracted
 bundle and checkouts share one parent, or pass the absolute projects directory.
 

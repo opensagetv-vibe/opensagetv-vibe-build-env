@@ -26,7 +26,7 @@ All repositories use the takeover/update contract documented in
 `create_ai_handoff_zip.cmd` interface as every component.
 
 Create one handoff containing the verified changed-files packages for all
-eight sibling repositories with:
+nine sibling repositories with:
 
 ```bat
 create_workspace_handoff_zip.cmd
@@ -53,6 +53,7 @@ opensagetv-vibe-ffmpeg-mim/
 opensagetv-vibe-xmltv-import/
 opensagetv-vibe-logo/
 opensagetv-vibe-android-client/
+opensagetv-vibe-sagemc/
 opensagetv-vibe-archive/
 ```
 
@@ -125,14 +126,15 @@ an SMB2/SMB3 commissioning share without adding a second utility container.
 5. XMLTV compilation and all importer regression tests.
 6. Canonical logo generation, 25-resource validation, and SHA-verified Android
    resource synchronization.
-7. Android client unit/static and MCP tests, source validation, and a clean
+7. SageMC Studio graph/API/reference tests and deterministic plugin packaging.
+8. Android client unit/static and MCP tests, source validation, and a clean
    deterministic debug APK build under JDK 17. Device operations are excluded.
-8. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
-9. Linux/amd64 production and debug runtime image builds.
-10. Clean-appdata health, supervised JVM recovery, repeated container restart
+9. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
+10. Linux/amd64 production and debug runtime image builds.
+11. Clean-appdata health, supervised JVM recovery, repeated container restart
    soak, SageTV UDP discovery, TCP service, XMLTV selection, OpenDCT protocol,
    lifecycle metrics, and resource-cleanup validation.
-11. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
+12. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
    compressed Docker exports, and the versioned release bundle.
 
 Any failed stage writes `BUILD FAILED`, records the failed stage in
@@ -162,6 +164,7 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 | `android-bundle-install` | Package-check and install the debug AAB APK set on the configured device |
 | `android-all` | Run tests, validation, deterministic APK/AAB builds, and bundletool validation together |
 | `android-mcp` | Start the Android MCP stdio server; device commissioning remains explicit |
+| `sagemc-test`, `sagemc-validate`, `sagemc-build`, `sagemc-all` | Audit, test, and package the SageMC modernization project |
 | `runtime-stage` | Validate and stage already-built runtime artifacts |
 | `runtime-images` | Build production and debug runtime images |
 | `runtime-image-status` | Report the expected/installed runtime-environment fingerprints and whether an image rebuild is needed |

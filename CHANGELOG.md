@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added `opensagetv-vibe-sagemc` as the ninth workspace project. The unified
+  container now mounts, audits, tests, validates, and packages SageMC; checkout,
+  workspace-handoff, release-provenance, and common workflow contracts include
+  it without rebuilding the development image.
+- Made the common `release.properties` checks tolerant of CRLF files while
+  retaining exact value validation on both Windows and Linux checkouts.
+
 - Prepared `opensagetv-vibe-build-env` for public source development under the
   Apache License 2.0 with contribution, security, and third-party dependency
   notices plus read-only GitHub repository checks.
