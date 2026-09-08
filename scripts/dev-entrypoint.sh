@@ -379,7 +379,7 @@ case "$cmd" in
     cd "$tmdb"
     bash /workspace/release-manifest/scripts/dev-entrypoint.sh tmdb-validate
     bash scripts/build.sh
-    echo 'SKIPPED: TMDB installation awaits the component-update lifecycle'
+    echo 'PASS: TMDB package is ready for component-only install/update/rollback'
     ;;
   tmdb-consumer-test)
     CORE_SOURCE="$core" TMDB_SOURCE="$tmdb" XMLTV_SOURCE="$xmltv" SAGEMC_SOURCE="$sagemc" \

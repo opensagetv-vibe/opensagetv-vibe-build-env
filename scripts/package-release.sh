@@ -17,19 +17,24 @@ build_image="${OPENSAGETV_VIBE_BUILD_IMAGE:-opensagetv-vibe-build-env:u26-j11}"
 output="$manifest_root/output"
 release_dir="$output/releases/$release_id"
 package_dir="$output/packages"
+image_export_cache="$output/image-exports"
 bundle="$package_dir/$release_id.tar.zst"
 opendct_status="$output/test-results/opendct-live.status"
 runtime_validation_log="$output/test-results/runtime-validation.log"
 android_test_log="$output/test-results/android-client.log"
+tmdb_version="$(sed -n 's/^VERSION=//p' "$tmdb/release.properties" | tr -d '\r')"
 
 test -s "$core/output/packages/sagetv-server-x86_64.tar.gz"
 test -s "$fm/output/linux-x64/ffmpeg_MIM"
 test -s "$fm/output/windows-x64/SageTVTranscoder.exe"
 test -s "$xmltv/output/packages/XMLTVImportPlugin.jar"
 test -s "$tmdb/output/packages/OpenSageTVVibeTMDB-plugin.zip"
+test -s "$tmdb/output/packages/OpenSageTVVibeTMDB-plugin-$tmdb_version.zip"
 test -s "$tmdb/output/packages/OpenSageTVVibeTMDB.jar"
 test -s "$tmdb/output/packages/gson-2.14.0.jar"
 test -s "$tmdb/output/packages/sqlite-jdbc-3.53.2.1.jar"
+test -s "$tmdb/output/packages/opensagetv-vibe-tmdb.plugin.xml"
+test -s "$tmdb/output/packages/SHA256SUMS"
 test -s "$tmdb/release.properties"
 test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk"
 test -s "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.aab"
@@ -62,7 +67,7 @@ mkdir -p \
   "$release_dir/images" "$release_dir/sbom" \
   "$release_dir/test-results" \
   "$release_dir/docs/build-env" "$release_dir/docs/container" "$release_dir/docs/android-client" "$release_dir/docs/sagemc" "$release_dir/docs/tmdb" \
-  "$package_dir"
+  "$package_dir" "$image_export_cache"
 
 cp "$core/output/packages/sagetv-server-x86_64.tar.gz" "$release_dir/components/core/"
 cp "$core/output/BUILD_REPORT.md" "$release_dir/components/core/BUILD_REPORT.md"
@@ -72,9 +77,12 @@ cp "$xmltv/output/packages/XMLTVImportPlugin.jar" "$release_dir/components/xmltv
 cp -a "$xmltv/output/config-examples" "$release_dir/components/xmltv/"
 cp -a "$xmltv/output/test-results" "$release_dir/components/xmltv/"
 cp "$tmdb/output/packages/OpenSageTVVibeTMDB-plugin.zip" \
+  "$tmdb/output/packages/OpenSageTVVibeTMDB-plugin-$tmdb_version.zip" \
   "$tmdb/output/packages/OpenSageTVVibeTMDB.jar" \
   "$tmdb/output/packages/gson-2.14.0.jar" \
   "$tmdb/output/packages/sqlite-jdbc-3.53.2.1.jar" \
+  "$tmdb/output/packages/opensagetv-vibe-tmdb.plugin.xml" \
+  "$tmdb/output/packages/SHA256SUMS" \
   "$tmdb/release.properties" "$release_dir/components/tmdb/"
 cp "$android/artifacts/firetv/OpenSageTV-Vibe-Android-Client-debug.apk" \
   "$release_dir/components/android-client/"
@@ -104,16 +112,11 @@ cp "$sagemc/README.md" "$sagemc/HANDOFF.md" "$sagemc/CHANGELOG.md" \
   "$sagemc/docs/ARCHITECTURE.md" "$sagemc/docs/UPSTREAM_PROVENANCE.md" \
   "$release_dir/docs/sagemc/"
 cp "$tmdb/README.md" "$tmdb/HANDOFF.md" "$tmdb/CHANGELOG.md" \
-  "$tmdb/THIRD_PARTY_NOTICES.md" "$release_dir/docs/tmdb/"
+  "$tmdb/THIRD_PARTY_NOTICES.md" "$tmdb/docs/TMDB_ATTRIBUTION.md" \
+  "$release_dir/docs/tmdb/"
 
 production_archive="$release_dir/images/opensagetv-vibe-server-u26-gpu-j11.tar.gz"
 debug_archive="$release_dir/images/opensagetv-vibe-server-u26-gpu-j11-debug.tar.gz"
-docker save "$production_image" | gzip -n -6 > "$production_archive"
-docker save "$debug_image" | gzip -n -6 > "$debug_archive"
-gzip -t "$production_archive"
-gzip -t "$debug_archive"
-gzip -dc "$production_archive" | tar -tf - >/dev/null
-gzip -dc "$debug_archive" | tar -tf - >/dev/null
 
 archive_config_id() {
   gzip -dc "$1" | tar -xOf - manifest.json | python3 -c '
@@ -130,6 +133,34 @@ print("sha256:" + match.group(1))
 '
 }
 
+reuse_or_export_image() {
+  local reference="$1" archive="$2" image_id="$3" cached temp
+  cached="$image_export_cache/${image_id#sha256:}.tar.gz"
+  if [[ -s "$cached" ]] && gzip -t "$cached" 2>/dev/null && \
+      gzip -dc "$cached" | tar -tf - >/dev/null 2>&1; then
+    ln "$cached" "$archive" 2>/dev/null || cp "$cached" "$archive"
+    echo REUSED
+    return
+  fi
+  temp="$(mktemp "$image_export_cache/.image-export.XXXXXX.tar.gz")"
+  if ! docker save "$reference" | gzip -n -6 > "$temp"; then
+    rm -f "$temp"
+    return 1
+  fi
+  gzip -t "$temp"
+  gzip -dc "$temp" | tar -tf - >/dev/null
+  mv "$temp" "$cached"
+  ln "$cached" "$archive" 2>/dev/null || cp "$cached" "$archive"
+  echo EXPORTED
+}
+
+production_id="$(docker image inspect "$production_image" --format '{{.Id}}')"
+debug_id="$(docker image inspect "$debug_image" --format '{{.Id}}')"
+production_export_status="$(reuse_or_export_image "$production_image" "$production_archive" "$production_id")"
+debug_export_status="$(reuse_or_export_image "$debug_image" "$debug_archive" "$debug_id")"
+gzip -t "$production_archive"
+gzip -t "$debug_archive"
+
 # Docker Desktop's containerd-backed local image-store ID can differ from the
 # config digest written by `docker save`. Record both: the exported config ID
 # is the identity that `docker load` will expose on the target Unraid host.
@@ -140,8 +171,6 @@ production_packages="$release_dir/sbom/production-packages.tsv"
 debug_packages="$release_dir/sbom/debug-packages.tsv"
 docker run --rm --entrypoint /usr/bin/dpkg-query "$production_image" -W '-f=${Package}\t${Version}\t${Architecture}\n' | sort > "$production_packages"
 docker run --rm --entrypoint /usr/bin/dpkg-query "$debug_image" -W '-f=${Package}\t${Version}\t${Architecture}\n' | sort > "$debug_packages"
-production_id="$(docker image inspect "$production_image" --format '{{.Id}}')"
-debug_id="$(docker image inspect "$debug_image" --format '{{.Id}}')"
 
 python3 "$manifest_root/scripts/generate-sbom.py" \
   --name opensagetv-vibe-release-artifacts --version "$release_id" \
@@ -186,9 +215,11 @@ cat > "$release_dir/RELEASE_REPORT.md" <<EOF
 - Production image: $production_image
   - local image-store ID: $production_id
   - exported archive config ID: $production_export_id
+  - archive action: $production_export_status
 - Debug image: $debug_image
   - local image-store ID: $debug_id
   - exported archive config ID: $debug_export_id
+  - archive action: $debug_export_status
 - Development image: $build_image ($(docker image inspect "$build_image" --format '{{.Id}}'))
 - MIM default: disabled
 - Hardware decode default: enabled

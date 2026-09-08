@@ -66,6 +66,8 @@ echo 'PASS: all OpenSageTV Vibe repositories share the root workflow contract'
 
 grep -Fq 'components/tmdb' "$build_env/scripts/package-release.sh"
 grep -Fq 'OpenSageTVVibeTMDB-plugin.zip' "$build_env/scripts/package-release.sh"
+grep -Fq 'opensagetv-vibe-tmdb.plugin.xml' "$build_env/scripts/package-release.sh"
+grep -Fq 'TMDB_ATTRIBUTION.md' "$build_env/scripts/package-release.sh"
 grep -Fq -- '--repo tmdb "$tmdb"' "$build_env/scripts/package-release.sh"
 grep -Fq -- '--tmdb-version-file "$tmdb/release.properties"' "$build_env/scripts/package-release.sh"
 grep -Fq '"tmdb": "https://github.com/opensagetv-vibe/opensagetv-vibe-tmdb.git"' \

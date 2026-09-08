@@ -2,9 +2,13 @@
 
 ## Unreleased
 
-- Added the standalone TMDB plugin ZIP, service/dependency JARs, durable docs,
-  source revision, and package version to unified release assembly. The
-  release-artifact SPDX document now covers the exact staged TMDB files.
+- Added validated Docker image-export reuse keyed by exact local image ID.
+  Metadata/plugin-only release assembly now reuses unchanged offline archives
+  rather than recompressing both runtime images.
+- Added the standalone TMDB canonical/versioned plugin ZIPs, V9 repository
+  manifest, checksums, service/dependency JARs, attribution docs, source
+  revision, and package version to unified release assembly. The
+  release-artifact SPDX document covers every exact staged TMDB file.
 - Added `opensagetv-vibe-tmdb` as the tenth unified component with a dedicated
   bind mount, checkout identity, root commands, clean handling, checkout
   reconstruction, and complete workspace handoff coverage. The installed image

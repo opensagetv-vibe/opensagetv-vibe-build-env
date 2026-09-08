@@ -177,7 +177,7 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 | `runtime-test` | Start a clean runtime and test lifecycle/health/network/plugin behavior |
 | `runtime-update-package COMPONENT` | Create a verified `core`, `mim`, `xmltv`, `tmdb`, or `comskip` appdata update archive |
 | `runtime-update-test COMPONENT|all` | Test component package, atomic install, restart health, and rollback without rebuilding Docker |
-| `release` | Reassemble manifests, SBOMs, checksums, image exports, and bundle |
+| `release` | Reassemble manifests, SBOMs, checksums, cached image exports, and bundle |
 | `runtime-all` | Run staging, runtime image, runtime test, and release stages |
 | `shell` | Enter the same reusable development container |
 | `clean` | Remove generated outputs, preserving the container, cache, and images |
@@ -274,6 +274,11 @@ gzip -dc images/opensagetv-vibe-server-u26-gpu-j11.tar.gz | docker load
 Install the CA XML and commission the clean appdata path documented by the
 container repository. No SageTV settings or appdata are included in the build
 or release bundle.
+
+Release assembly caches a validated compressed archive by local Docker image
+ID under `output/image-exports/`. Metadata-only or plugin-only release updates
+reuse that archive instead of repeating `docker save | gzip`; a changed image
+ID automatically creates a new export.
 
 MIM is included but remains `MIM_ENABLED=false` until the separate Android
 MiniClient and physical AMD/NVIDIA release gates pass. Hardware decode defaults
