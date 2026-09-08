@@ -10,6 +10,9 @@
 - Added `tmdb` to targeted runtime component package/test handling. The
   install/rollback self-test preserves private configuration and now runs only
   the selected expensive component lifecycle for faster iteration.
+- Added `tmdb-consumer-test` and the same mandatory full-pipeline stage. It
+  exercises the real SageMC and XMLTV adapters simultaneously against one
+  shared TMDB service for 4,000 adapter operations and 12,000 service calls.
 
 - Added `opensagetv-vibe-sagemc` as the ninth workspace project. The unified
   container now mounts, audits, tests, validates, and packages SageMC; checkout,

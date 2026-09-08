@@ -130,14 +130,15 @@ an SMB2/SMB3 commissioning share without adding a second utility container.
 7. Canonical logo generation, 25-resource validation, and SHA-verified Android
    resource synchronization.
 8. SageMC Studio graph/API/reference tests and deterministic plugin packaging.
-9. Android client unit/static and MCP tests, source validation, and a clean
+9. A simultaneous 4,000-operation SageMC/XMLTV shared-TMDB adapter stress run.
+10. Android client unit/static and MCP tests, source validation, and a clean
    deterministic debug APK build under JDK 17. Device operations are excluded.
-10. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
-11. Linux/amd64 production and debug runtime image builds.
-12. Clean-appdata health, supervised JVM recovery, repeated container restart
+11. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
+12. Linux/amd64 production and debug runtime image builds.
+13. Clean-appdata health, supervised JVM recovery, repeated container restart
    soak, SageTV UDP discovery, TCP service, XMLTV selection, OpenDCT protocol,
    lifecycle metrics, and resource-cleanup validation.
-13. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
+14. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
    compressed Docker exports, and the versioned release bundle.
 
 Any failed stage writes `BUILD FAILED`, records the failed stage in
@@ -157,6 +158,7 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 | `test-mim` | Run all non-Android MIM lifecycle and real-media tests |
 | `xmltv` | Build and test only the XMLTV importer JAR |
 | `tmdb-test`, `tmdb-validate`, `tmdb-build`, `tmdb-all` | Test, validate, package, or run all gates for the reusable TMDB service |
+| `tmdb-consumer-test` | Stress the real SageMC and XMLTV adapters against one shared TMDB service |
 | `logo-info` | Report the pinned logo Python/CairoSVG/Pillow/font environment |
 | `logo-test`, `logo-validate` | Run logo unit tests or validate all generated assets |
 | `logo-build`, `logo-install` | Generate canonical assets or atomically synchronize them into Android |

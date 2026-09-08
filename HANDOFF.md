@@ -98,6 +98,11 @@ build/install self-test passes. No toolchain-image rebuild was needed.
 The `runtime-update-package tmdb` and `runtime-update-test tmdb` paths also pass;
 the latter proves exact payload install, private-config preservation, and
 rollback without rebuilding Docker.
+The full pipeline and standalone `tmdb-consumer-test` command now compile the
+actual SageMC and XMLTV adapters against one shared service fixture. Four SageMC
+and four XMLTV workers completed 4,000 adapter operations and 12,000 service
+calls without failure, proving simultaneous consumer isolation before runtime
+commissioning.
 
 Java 11 remains the default server toolchain, while Android commands select
 JDK 17 and the frozen comparison command selects JDK 8 per process. The

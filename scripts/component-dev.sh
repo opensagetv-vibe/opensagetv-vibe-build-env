@@ -42,7 +42,7 @@ artifact_only_install() {
 # unified command so Windows users do not need to know a second script name.
 if [[ "$project" == opensagetv-vibe-build-env ]]; then
   case "$command" in
-    image|start|stop|remove-dev|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|tmdb-test|tmdb-validate|tmdb-build|tmdb-all|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
+    image|start|stop|remove-dev|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|xmltv|tmdb-test|tmdb-validate|tmdb-build|tmdb-all|tmdb-consumer-test|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
       exec "$unified" "$command" "$@"
       ;;
   esac

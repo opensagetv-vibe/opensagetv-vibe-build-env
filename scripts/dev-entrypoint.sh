@@ -380,6 +380,10 @@ case "$cmd" in
     bash scripts/build.sh
     echo 'SKIPPED: TMDB installation awaits the component-update lifecycle'
     ;;
+  tmdb-consumer-test)
+    CORE_SOURCE="$core" TMDB_SOURCE="$tmdb" XMLTV_SOURCE="$xmltv" SAGEMC_SOURCE="$sagemc" \
+      exec bash "$manifest/tests/tmdb-consumer-stress.sh"
+    ;;
   logo-info)
     validate_environment
     logo_environment python3 -c 'import importlib.metadata as m; print("cairosvg=" + m.version("CairoSVG")); print("pillow=" + m.version("Pillow"))'
@@ -440,6 +444,9 @@ case "$cmd" in
     run_stage 'XMLTV compile, regression tests, and package' bash -c "cd '$xmltv' && bash scripts/build.sh"
     run_stage 'Reusable TMDB service compile, cache/HTTP tests, and package' bash -c "cd '$tmdb' && bash scripts/build.sh"
     run_stage 'SageMC Studio graph tests, validation, and package' bash -c "cd '$sagemc' && SAGETV_CORE_ROOT='$core' bash scripts/test.sh && SAGETV_CORE_ROOT='$core' bash scripts/build.sh"
+    run_stage 'Simultaneous SageMC/XMLTV shared-TMDB adapter stress' \
+      env CORE_SOURCE="$core" TMDB_SOURCE="$tmdb" XMLTV_SOURCE="$xmltv" SAGEMC_SOURCE="$sagemc" \
+      bash "$manifest/tests/tmdb-consumer-stress.sh"
     run_stage 'Android client tests, validation, deterministic APK/AAB builds, and bundletool checks' run_android_suite
     run_stage 'Runtime artifact staging and integrity' runtime_stage
     run_stage 'Production and debug runtime image builds' runtime_images
@@ -452,6 +459,6 @@ case "$cmd" in
     ;;
   shell) exec bash "$@" ;;
   help|*)
-    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv tmdb-test tmdb-validate tmdb-build tmdb-all logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
+    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv tmdb-test tmdb-validate tmdb-build tmdb-all tmdb-consumer-test logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
     ;;
 esac
