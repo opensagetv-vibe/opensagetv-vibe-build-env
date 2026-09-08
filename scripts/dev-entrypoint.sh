@@ -227,8 +227,8 @@ runtime_test() {
 }
 
 runtime_update_package() {
-  local component="${1:?component required: core, mim, xmltv, or comskip}"
-  env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
+  local component="${1:?component required: core, mim, xmltv, tmdb, or comskip}"
+  env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
     bash "$container/scripts/create-component-update.sh" \
       "$component" "$container/output/component-updates"
 }
@@ -236,17 +236,19 @@ runtime_update_package() {
 runtime_update_test() {
   local component="${1:-all}"
   if [[ "$component" == all ]]; then
-    for item in core mim xmltv comskip; do
-      env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
+    for item in core mim xmltv tmdb comskip; do
+      env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
         bash "$container/scripts/test-component.sh" "$item"
     done
-    env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
+    env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
       bash "$container/tests/component-update-selftest.sh"
   else
-    env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
+    env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
       bash "$container/scripts/test-component.sh" "$component"
-    [[ "$component" != mim ]] || env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
-      bash "$container/tests/component-update-selftest.sh"
+    if [[ "$component" == mim || "$component" == tmdb ]]; then
+      env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
+        bash "$container/tests/component-update-selftest.sh" "$component"
+    fi
   fi
 }
 
@@ -333,7 +335,7 @@ run_runtime_all() {
 
 configure_safe_directories() {
   local path
-  for path in "$core" "$fm" "$xmltv" "$container" "$logo" "$android" "$manifest"; do
+  for path in "$core" "$fm" "$xmltv" "$tmdb" "$container" "$logo" "$android" "$sagemc" "$manifest"; do
     [[ -d "$path/.git" ]] || continue
     if ! git config --global --get-all safe.directory 2>/dev/null | grep -Fqx "$path"; then
       git config --global --add safe.directory "$path"

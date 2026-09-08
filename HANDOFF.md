@@ -95,6 +95,9 @@ pass in the existing image, including SQLite/cache/API regressions and actual
 `Sage.jar` plugin binary linkage. Both checkout helpers and the complete
 workspace handoff now include it; the isolated ten-package apply/test/validate/
 build/install self-test passes. No toolchain-image rebuild was needed.
+The `runtime-update-package tmdb` and `runtime-update-test tmdb` paths also pass;
+the latter proves exact payload install, private-config preservation, and
+rollback without rebuilding Docker.
 
 Java 11 remains the default server toolchain, while Android commands select
 JDK 17 and the frozen comparison command selects JDK 8 per process. The

@@ -7,6 +7,9 @@
   reconstruction, and complete workspace handoff coverage. The installed image
   passed its tests/build and the ten-repository handoff self-test without an
   image rebuild.
+- Added `tmdb` to targeted runtime component package/test handling. The
+  install/rollback self-test preserves private configuration and now runs only
+  the selected expensive component lifecycle for faster iteration.
 
 - Added `opensagetv-vibe-sagemc` as the ninth workspace project. The unified
   container now mounts, audits, tests, validates, and packages SageMC; checkout,

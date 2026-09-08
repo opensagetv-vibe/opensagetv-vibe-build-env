@@ -173,7 +173,7 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 | `runtime-images` | Build production and debug runtime images |
 | `runtime-image-status` | Report the expected/installed runtime-environment fingerprints and whether an image rebuild is needed |
 | `runtime-test` | Start a clean runtime and test lifecycle/health/network/plugin behavior |
-| `runtime-update-package COMPONENT` | Create a verified `core`, `mim`, `xmltv`, or `comskip` appdata update archive |
+| `runtime-update-package COMPONENT` | Create a verified `core`, `mim`, `xmltv`, `tmdb`, or `comskip` appdata update archive |
 | `runtime-update-test COMPONENT|all` | Test component package, atomic install, restart health, and rollback without rebuilding Docker |
 | `release` | Reassemble manifests, SBOMs, checksums, image exports, and bundle |
 | `runtime-all` | Run staging, runtime image, runtime test, and release stages |
@@ -189,7 +189,7 @@ use this workflow only with trusted source.
 
 The runtime image represents Ubuntu 26, Java 11, GPU/system libraries, and the
 container supervisor. SageTV application payloads live in persistent appdata
-after initial seeding. For a Core, FFmpeg/MIM, XMLTV, or Comskip code change,
+after initial seeding. For a Core, FFmpeg/MIM, XMLTV, TMDB, or Comskip code change,
 build that component, run `runtime-update-package`, copy the resulting archive
 to Unraid, and restart only the selected SageTV test container. The installer
 backs up replaced files and can roll them back.
