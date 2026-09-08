@@ -25,8 +25,8 @@ All repositories use the takeover/update contract documented in
 `dev.cmd`/`dev.sh`, `update.cmd`/`update.sh`, and
 `create_ai_handoff_zip.cmd` interface as every component.
 
-Create one handoff containing the verified changed-files packages for all
-nine sibling repositories with:
+Create one handoff containing the verified changed-files packages for all ten
+sibling repositories with:
 
 ```bat
 create_workspace_handoff_zip.cmd
@@ -51,6 +51,7 @@ opensagetv-vibe-container/
 opensagetv-vibe-core/
 opensagetv-vibe-ffmpeg-mim/
 opensagetv-vibe-xmltv-import/
+opensagetv-vibe-tmdb/
 opensagetv-vibe-logo/
 opensagetv-vibe-android-client/
 opensagetv-vibe-sagemc/
@@ -124,17 +125,19 @@ an SMB2/SMB3 commissioning share without adding a second utility container.
 4. MIM lifecycle, growing-file, join-in-progress, A/V integrity, and teardown
    tests.
 5. XMLTV compilation and all importer regression tests.
-6. Canonical logo generation, 25-resource validation, and SHA-verified Android
+6. Reusable TMDB service Java 8 compilation, SQLite/cache/API regression tests,
+   and artifact packaging.
+7. Canonical logo generation, 25-resource validation, and SHA-verified Android
    resource synchronization.
-7. SageMC Studio graph/API/reference tests and deterministic plugin packaging.
-8. Android client unit/static and MCP tests, source validation, and a clean
+8. SageMC Studio graph/API/reference tests and deterministic plugin packaging.
+9. Android client unit/static and MCP tests, source validation, and a clean
    deterministic debug APK build under JDK 17. Device operations are excluded.
-9. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
-10. Linux/amd64 production and debug runtime image builds.
-11. Clean-appdata health, supervised JVM recovery, repeated container restart
+10. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
+11. Linux/amd64 production and debug runtime image builds.
+12. Clean-appdata health, supervised JVM recovery, repeated container restart
    soak, SageTV UDP discovery, TCP service, XMLTV selection, OpenDCT protocol,
    lifecycle metrics, and resource-cleanup validation.
-12. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
+13. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
    compressed Docker exports, and the versioned release bundle.
 
 Any failed stage writes `BUILD FAILED`, records the failed stage in
@@ -153,6 +156,7 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 | `ffmpeg-info` | Validate both toolchains, Docker access, and container source mount |
 | `test-mim` | Run all non-Android MIM lifecycle and real-media tests |
 | `xmltv` | Build and test only the XMLTV importer JAR |
+| `tmdb-test`, `tmdb-validate`, `tmdb-build`, `tmdb-all` | Test, validate, package, or run all gates for the reusable TMDB service |
 | `logo-info` | Report the pinned logo Python/CairoSVG/Pillow/font environment |
 | `logo-test`, `logo-validate` | Run logo unit tests or validate all generated assets |
 | `logo-build`, `logo-install` | Generate canonical assets or atomically synchronize them into Android |

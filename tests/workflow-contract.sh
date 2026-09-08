@@ -9,6 +9,7 @@ repos=(
   opensagetv-vibe-container
   opensagetv-vibe-ffmpeg-mim
   opensagetv-vibe-xmltv-import
+  opensagetv-vibe-tmdb
   opensagetv-vibe-logo
   opensagetv-vibe-android-client
   opensagetv-vibe-sagemc

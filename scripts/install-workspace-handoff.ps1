@@ -22,7 +22,7 @@ try {
   $apply=Join-Path $stage 'tools\apply-workspace-handoff.ps1'
   if(-not (Test-Path -LiteralPath $apply)){throw 'Workspace ZIP lacks its commissioning script.'}
   $packages=@(Get-ChildItem -LiteralPath (Join-Path $stage 'updates') -Recurse -Filter '*-changed-files-only.zip')
-  if($packages.Count -ne 9){throw "Workspace ZIP must contain nine component packages; found $($packages.Count)."}
+  if($packages.Count -ne 10){throw "Workspace ZIP must contain ten component packages; found $($packages.Count)."}
   & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $apply `
     -BundleRoot $stage -ProjectsRoot $projects
   if($LASTEXITCODE){throw "Workspace commissioning failed with exit $LASTEXITCODE"}

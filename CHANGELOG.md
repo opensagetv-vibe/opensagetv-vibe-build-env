@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added `opensagetv-vibe-tmdb` as the tenth unified component with a dedicated
+  bind mount, checkout identity, root commands, clean handling, checkout
+  reconstruction, and complete workspace handoff coverage. The installed image
+  passed its tests/build and the ten-repository handoff self-test without an
+  image rebuild.
+
 - Added `opensagetv-vibe-sagemc` as the ninth workspace project. The unified
   container now mounts, audits, tests, validates, and packages SageMC; checkout,
   workspace-handoff, release-provenance, and common workflow contracts include

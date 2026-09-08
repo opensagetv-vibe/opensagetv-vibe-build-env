@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('image','start','stop','remove-dev','all','core','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','xmltv','logo-info','logo-test','logo-validate','logo-build','logo-install','logo-all','android-info','android-test','android-validate','android-build','android-bundle','android-bundle-install','android-all','android-mcp','runtime-stage','runtime-images','runtime-image-status','runtime-test','runtime-update-package','runtime-update-test','release','runtime-all','clean','shell')]
+  [ValidateSet('image','start','stop','remove-dev','all','core','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','xmltv','tmdb-test','tmdb-validate','tmdb-build','tmdb-all','logo-info','logo-test','logo-validate','logo-build','logo-install','logo-all','android-info','android-test','android-validate','android-build','android-bundle','android-bundle-install','android-all','android-mcp','runtime-stage','runtime-images','runtime-image-status','runtime-test','runtime-update-package','runtime-update-test','release','runtime-all','clean','shell')]
   [string]$Command='all',
   [Parameter(ValueFromRemainingArguments=$true)][string[]]$CommandArgs
 )
@@ -110,6 +110,7 @@ function Ensure-DevContainer {
       -v "$projects\opensagetv-vibe-core:/work/sagetv" `
       -v "$projects\opensagetv-vibe-ffmpeg-mim:/project" `
       -v "$projects\opensagetv-vibe-xmltv-import:/workspace/xmltv-import" `
+      -v "$projects\opensagetv-vibe-tmdb:/workspace/tmdb" `
       -v "$projects\opensagetv-vibe-container:/workspace/container" `
       -v "$projects\opensagetv-vibe-logo:/workspace/logo" `
       -v "$projects\opensagetv-vibe-android-client:/workspace/android-client" `

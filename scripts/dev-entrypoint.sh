@@ -6,6 +6,7 @@ shift || true
 core=/work/sagetv
 fm=/project
 xmltv=/workspace/xmltv-import
+tmdb=/workspace/tmdb
 container=/workspace/container
 logo=/workspace/logo
 android=/workspace/android-client
@@ -45,6 +46,7 @@ validate_environment() {
   test -f "$android/docker/entrypoint.sh"
   test -f "$android/source/dev/gradlew"
   test -f "$sagemc/source/dev/SageMC_169.xml"
+  test -f "$tmdb/source/main/java/org/opensagetv/vibe/tmdb/TmdbMetadataService.java"
   command -v docker >/dev/null
   docker buildx version >/dev/null
   command -v smbclient >/dev/null
@@ -361,6 +363,21 @@ case "$cmd" in
     ;;
   test-mim) run_mim_suite ;;
   xmltv) cd "$xmltv"; exec bash scripts/build.sh ;;
+  tmdb-test) cd "$tmdb"; exec bash scripts/build.sh ;;
+  tmdb-validate)
+    cd "$tmdb"
+    find . -type f \( -name 'tmdb_config.toml' -o -name '*.sqlite3' -o -name '*.sqlite3-wal' -o -name '*.sqlite3-shm' \) \
+      -not -path './.deps/*' -not -path './output/*' -print -quit | grep -q . && {
+        echo 'ERROR: private TMDB configuration/cache in publishable source' >&2; exit 1; }
+    echo 'PASS: no private TMDB configuration/cache in publishable source'
+    ;;
+  tmdb-build) cd "$tmdb"; exec bash scripts/build.sh ;;
+  tmdb-all)
+    cd "$tmdb"
+    bash /workspace/release-manifest/scripts/dev-entrypoint.sh tmdb-validate
+    bash scripts/build.sh
+    echo 'SKIPPED: TMDB installation awaits the component-update lifecycle'
+    ;;
   logo-info)
     validate_environment
     logo_environment python3 -c 'import importlib.metadata as m; print("cairosvg=" + m.version("CairoSVG")); print("pillow=" + m.version("Pillow"))'
@@ -406,7 +423,7 @@ case "$cmd" in
   clean)
     cd "$core"; bash tests/linux-modern/clean.sh
     android_clean
-    rm -rf "$fm/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$container/artifacts" "$logo/generated" "$sagemc/output"
+    rm -rf "$fm/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$tmdb/output" "$container/artifacts" "$logo/generated" "$sagemc/output"
     echo 'Build outputs cleaned; reusable container, cache, and release images retained'
     ;;
   all)
@@ -419,6 +436,7 @@ case "$cmd" in
     run_stage 'FFmpeg/MIM Windows x64 build' ffmpeg_target windows-x64 win64
     run_stage 'MIM lifecycle and media-integrity tests' run_mim_suite
     run_stage 'XMLTV compile, regression tests, and package' bash -c "cd '$xmltv' && bash scripts/build.sh"
+    run_stage 'Reusable TMDB service compile, cache/HTTP tests, and package' bash -c "cd '$tmdb' && bash scripts/build.sh"
     run_stage 'SageMC Studio graph tests, validation, and package' bash -c "cd '$sagemc' && SAGETV_CORE_ROOT='$core' bash scripts/test.sh && SAGETV_CORE_ROOT='$core' bash scripts/build.sh"
     run_stage 'Android client tests, validation, deterministic APK/AAB builds, and bundletool checks' run_android_suite
     run_stage 'Runtime artifact staging and integrity' runtime_stage
@@ -432,6 +450,6 @@ case "$cmd" in
     ;;
   shell) exec bash "$@" ;;
   help|*)
-    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
+    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv tmdb-test tmdb-validate tmdb-build tmdb-all logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
     ;;
 esac
