@@ -3,7 +3,8 @@
 ## Unreleased
 
 - Updated repository CI to the current Node 24-based
-  `actions/checkout@v7` release.
+  `actions/checkout@v7` release. CI also locks executable Git metadata for the
+  documented Linux entry points and maintained consumer-stress test.
 - Added validated Docker image-export reuse keyed by exact local image ID.
   Metadata/plugin-only release assembly now reuses unchanged offline archives
   rather than recompressing both runtime images.

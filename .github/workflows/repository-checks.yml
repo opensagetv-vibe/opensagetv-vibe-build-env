@@ -25,6 +25,9 @@ jobs:
           test -f LICENSE
           test -f THIRD_PARTY_NOTICES.md
           test -f release.properties
+          test -x dev.sh
+          test -x update.sh
+          test -x tests/tmdb-consumer-stress.sh
           grep -qx '  publish_container_images_to_registry: false' release-manifest.yml
           bash -n opensagetv-vibe-dev.sh checkout-all.sh dev.sh update.sh
           find scripts tests -type f -name '*.sh' -print0 | xargs -0 -r bash -n
