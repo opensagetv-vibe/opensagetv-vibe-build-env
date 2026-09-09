@@ -17,7 +17,7 @@ jobs:
   repository-checks:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Verify publication policy and syntax
         shell: bash
         run: |

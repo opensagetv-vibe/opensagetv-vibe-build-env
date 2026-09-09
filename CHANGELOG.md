@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Updated repository CI to the current Node 24-based
+  `actions/checkout@v7` release.
 - Added validated Docker image-export reuse keyed by exact local image ID.
   Metadata/plugin-only release assembly now reuses unchanged offline archives
   rather than recompressing both runtime images.
