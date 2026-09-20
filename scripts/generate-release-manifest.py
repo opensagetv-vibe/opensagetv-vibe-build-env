@@ -16,6 +16,7 @@ SOURCES = {
     "core": "https://github.com/opensagetv-vibe/opensagetv-vibe-core.git",
     "container": "https://github.com/opensagetv-vibe/opensagetv-vibe-container.git",
     "ffmpeg_mim": "https://github.com/opensagetv-vibe/opensagetv-vibe-ffmpeg-mim.git",
+    "ffmpeg_plugin": "https://github.com/opensagetv-vibe/opensagetv-vibe-SageTVFFmpegPlugin.git",
     "xmltv_import": "https://github.com/opensagetv-vibe/opensagetv-vibe-xmltv-import.git",
     "tmdb": "https://github.com/opensagetv-vibe/opensagetv-vibe-tmdb.git",
     "logo": "https://github.com/opensagetv-vibe/opensagetv-vibe-logo.git",
@@ -114,6 +115,7 @@ def main():
     parser.add_argument("--android-version-file", required=True)
     parser.add_argument("--sagemc-version-file", required=True)
     parser.add_argument("--tmdb-version-file", required=True)
+    parser.add_argument("--ffmpeg-plugin-version-file", required=True)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
@@ -164,6 +166,17 @@ def main():
     ):
         raise ValueError(f"invalid TMDB VERSION in {args.tmdb_version_file!r}")
     tmdb_version = tmdb_versions[0]
+    ffmpeg_plugin_properties = pathlib.Path(args.ffmpeg_plugin_version_file).read_text().splitlines()
+    ffmpeg_plugin_versions = [
+        line.partition("=")[2].strip()
+        for line in ffmpeg_plugin_properties
+        if line.partition("=")[0].strip() == "VERSION"
+    ]
+    if len(ffmpeg_plugin_versions) != 1 or not re.fullmatch(
+        r"[0-9]+(?:\.[0-9]+){1,3}(?:-[0-9A-Za-z.-]+)?", ffmpeg_plugin_versions[0]
+    ):
+        raise ValueError(f"invalid FFmpeg plugin VERSION in {args.ffmpeg_plugin_version_file!r}")
+    ffmpeg_plugin_version = ffmpeg_plugin_versions[0]
     restart_match = re.search(
         r"^RUNTIME RESTART SOAK PASSED: supervisor restart \+ (\d+) container restarts$",
         runtime_log,
@@ -191,6 +204,7 @@ def main():
             "sagetv": "9.2.10",
             "ffmpeg": "n9.0.1",
             "mim": "0.4.5",
+            "ffmpeg_plugin": ffmpeg_plugin_version,
             "xmltv_import": "3.5",
             "tmdb": tmdb_version,
             "android_client": android_version,

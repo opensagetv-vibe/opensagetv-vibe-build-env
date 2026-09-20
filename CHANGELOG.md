@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `opensagetv-vibe-SageTVFFmpegPlugin` as the eleventh unified component.
+- Completed its checkout, reusable-container command, workspace-handoff,
+  release staging, exact-source manifest, SPDX, and documentation integration.
+  The staged component contains deterministic Standard plugin, STVi,
+  Linux/Windows launcher, rendered manifest, and checksum artifacts.
 - Updated repository CI to the current Node 24-based
   `actions/checkout@v7` release. CI also locks executable Git metadata for the
   documented Linux entry points and maintained consumer-stress test.

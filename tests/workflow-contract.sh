@@ -8,6 +8,7 @@ repos=(
   opensagetv-vibe-core
   opensagetv-vibe-container
   opensagetv-vibe-ffmpeg-mim
+  opensagetv-vibe-SageTVFFmpegPlugin
   opensagetv-vibe-xmltv-import
   opensagetv-vibe-tmdb
   opensagetv-vibe-logo
@@ -73,3 +74,10 @@ grep -Fq -- '--tmdb-version-file "$tmdb/release.properties"' "$build_env/scripts
 grep -Fq '"tmdb": "https://github.com/opensagetv-vibe/opensagetv-vibe-tmdb.git"' \
   "$build_env/scripts/generate-release-manifest.py"
 echo 'PASS: unified release stages and records the standalone TMDB component'
+
+grep -Fq 'components/ffmpeg-plugin' "$build_env/scripts/package-release.sh"
+grep -Fq -- '--repo ffmpeg_plugin "$ffmpeg_plugin"' "$build_env/scripts/package-release.sh"
+grep -Fq -- '--ffmpeg-plugin-version-file "$ffmpeg_plugin/release.properties"' "$build_env/scripts/package-release.sh"
+grep -Fq '"ffmpeg_plugin": "https://github.com/opensagetv-vibe/opensagetv-vibe-SageTVFFmpegPlugin.git"' \
+  "$build_env/scripts/generate-release-manifest.py"
+echo 'PASS: unified release stages and records the stock-server FFmpeg plugin'

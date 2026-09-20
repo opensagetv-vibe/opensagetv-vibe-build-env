@@ -5,6 +5,7 @@ cmd="${1:-help}"
 shift || true
 core=/work/sagetv
 fm=/project
+ffmpeg_plugin=/workspace/ffmpeg-plugin
 xmltv=/workspace/xmltv-import
 tmdb=/workspace/tmdb
 container=/workspace/container
@@ -47,6 +48,7 @@ validate_environment() {
   test -f "$android/source/dev/gradlew"
   test -f "$sagemc/source/dev/SageMC_169.xml"
   test -f "$tmdb/source/main/java/org/opensagetv/vibe/tmdb/TmdbMetadataService.java"
+  test -f "$ffmpeg_plugin/src/main/java/org/opensagetv/vibe/ffmpeg/SageTVFFmpegPlugin.java"
   command -v docker >/dev/null
   docker buildx version >/dev/null
   command -v smbclient >/dev/null
@@ -176,14 +178,27 @@ run_mim_suite() {
   {
     bash code/mim/tests/run_init_tests.sh
     bash code/mim/tests/run_mim_tests.sh
+    python3 code/mim/tests/run_plugin_runtime_tests.py
     bash code/mim/tests/run_media_tests.sh
   } | tee output/test-results/non-android-suite.log
+}
+
+package_mim_plugin_runtime() {
+  cd "$fm"
+  local version
+  version="$(sed -n 's/^VERSION=//p' release.properties 2>/dev/null || true)"
+  if [[ -z "$version" ]]; then
+    version="$(grep -Eo 'v?[0-9]+\.[0-9]+\.[0-9]+' code/mim/sagetv_ffmpeg_mim.cpp | head -1 | sed 's/^v//')"
+  fi
+  : "${version:?Unable to determine MIM version}"
+  python3 code/tools/package_sagetv_plugin_runtime.py --target linux-x64 --version "$version"
+  python3 code/tools/package_sagetv_plugin_runtime.py --target windows-x64 --version "$version"
+  python3 code/mim/tests/run_plugin_runtime_tests.py
 }
 
 runtime_stage() {
   env \
     CORE_PACKAGE="$core/output/packages/sagetv-server-x86_64.tar.gz" \
-    MIM_OUTPUT="$fm/output/linux-x64" \
     XMLTV_OUTPUT="$xmltv/output" \
     bash "$container/stage-artifacts.sh"
 }
@@ -191,7 +206,7 @@ runtime_stage() {
 runtime_images() {
   env \
     SKIP_ARTIFACT_STAGE=true \
-    CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" \
+    CORE_SOURCE="$core" XMLTV_SOURCE="$xmltv" \
     OPENSAGETV_VIBE_SERVER_IMAGE="$production_image" \
     OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE="$debug_image" \
     bash "$container/build.sh"
@@ -218,7 +233,6 @@ runtime_test() {
   mkdir -p "$manifest/output/test-results"
   env \
     CORE_SOURCE="$core" \
-    MIM_SOURCE="$fm" \
     XMLTV_SOURCE="$xmltv" \
     OPENDCT_STATUS_FILE="$manifest/output/test-results/opendct-live.status" \
     OPENSAGETV_VIBE_SERVER_IMAGE="$production_image" \
@@ -227,8 +241,8 @@ runtime_test() {
 }
 
 runtime_update_package() {
-  local component="${1:?component required: core, mim, xmltv, tmdb, or comskip}"
-  env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
+  local component="${1:?component required: core, xmltv, tmdb, or comskip}"
+  env CORE_SOURCE="$core" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
     bash "$container/scripts/create-component-update.sh" \
       "$component" "$container/output/component-updates"
 }
@@ -236,17 +250,17 @@ runtime_update_package() {
 runtime_update_test() {
   local component="${1:-all}"
   if [[ "$component" == all ]]; then
-    for item in core mim xmltv tmdb comskip; do
-      env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
+    for item in core xmltv tmdb comskip; do
+      env CORE_SOURCE="$core" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
         bash "$container/scripts/test-component.sh" "$item"
     done
-    env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
+    env CORE_SOURCE="$core" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
       bash "$container/tests/component-update-selftest.sh"
   else
-    env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
+    env CORE_SOURCE="$core" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
       bash "$container/scripts/test-component.sh" "$component"
-    if [[ "$component" == mim || "$component" == tmdb ]]; then
-      env CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
+    if [[ "$component" == tmdb ]]; then
+      env CORE_SOURCE="$core" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
         bash "$container/tests/component-update-selftest.sh" "$component"
     fi
   fi
@@ -336,7 +350,7 @@ run_runtime_all() {
 
 configure_safe_directories() {
   local path
-  for path in "$core" "$fm" "$xmltv" "$tmdb" "$container" "$logo" "$android" "$sagemc" "$manifest"; do
+  for path in "$core" "$fm" "$ffmpeg_plugin" "$xmltv" "$tmdb" "$container" "$logo" "$android" "$sagemc" "$manifest"; do
     [[ -d "$path/.git" ]] || continue
     if ! git config --global --get-all safe.directory 2>/dev/null | grep -Fqx "$path"; then
       git config --global --add safe.directory "$path"
@@ -365,6 +379,16 @@ case "$cmd" in
     echo 'runtime_container_source=PASS'
     ;;
   test-mim) run_mim_suite ;;
+  ffmpeg-runtime-package) package_mim_plugin_runtime ;;
+  ffmpeg-plugin-test) cd "$ffmpeg_plugin"; exec bash scripts/test.sh ;;
+  ffmpeg-plugin-validate) cd "$ffmpeg_plugin"; exec bash scripts/validate.sh ;;
+  ffmpeg-plugin-build) cd "$ffmpeg_plugin"; exec env MIM_REPO_ROOT="$fm" bash scripts/package-dev.sh ;;
+  ffmpeg-plugin-all)
+    cd "$ffmpeg_plugin"
+    bash scripts/test.sh
+    bash scripts/validate.sh
+    env MIM_REPO_ROOT="$fm" bash scripts/package-dev.sh
+    ;;
   xmltv) cd "$xmltv"; exec bash scripts/build.sh ;;
   tmdb-test) cd "$tmdb"; exec bash scripts/build.sh ;;
   tmdb-validate)
@@ -430,7 +454,7 @@ case "$cmd" in
   clean)
     cd "$core"; bash tests/linux-modern/clean.sh
     android_clean
-    rm -rf "$fm/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$tmdb/output" "$container/artifacts" "$logo/generated" "$sagemc/output"
+    rm -rf "$fm/output" "$ffmpeg_plugin/build" "$ffmpeg_plugin/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$tmdb/output" "$container/artifacts" "$logo/generated" "$sagemc/output"
     echo 'Build outputs cleaned; reusable container, cache, and release images retained'
     ;;
   all)
@@ -442,6 +466,8 @@ case "$cmd" in
     run_stage 'FFmpeg/MIM Linux x64 build' ffmpeg_target linux-x64 linux64
     run_stage 'FFmpeg/MIM Windows x64 build' ffmpeg_target windows-x64 win64
     run_stage 'MIM lifecycle and media-integrity tests' run_mim_suite
+    run_stage 'MIM SageTV plugin runtime packages' package_mim_plugin_runtime
+    run_stage 'Stock-server FFmpeg Standard plugin and STVi' bash -c "cd '$ffmpeg_plugin' && bash scripts/test.sh && bash scripts/validate.sh && MIM_REPO_ROOT='$fm' bash scripts/package-dev.sh"
     run_stage 'XMLTV compile, regression tests, and package' bash -c "cd '$xmltv' && bash scripts/build.sh"
     run_stage 'Reusable TMDB service compile, cache/HTTP tests, and package' bash -c "cd '$tmdb' && bash scripts/build.sh"
     run_stage 'SageMC Studio graph tests, validation, and package' bash -c "cd '$sagemc' && SAGETV_CORE_ROOT='$core' bash scripts/test.sh && SAGETV_CORE_ROOT='$core' bash scripts/build.sh"
@@ -460,6 +486,6 @@ case "$cmd" in
     ;;
   shell) exec bash "$@" ;;
   help|*)
-    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim xmltv tmdb-test tmdb-validate tmdb-build tmdb-all tmdb-consumer-test logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
+    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim ffmpeg-runtime-package ffmpeg-plugin-test ffmpeg-plugin-validate ffmpeg-plugin-build ffmpeg-plugin-all xmltv tmdb-test tmdb-validate tmdb-build tmdb-all tmdb-consumer-test logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
     ;;
 esac

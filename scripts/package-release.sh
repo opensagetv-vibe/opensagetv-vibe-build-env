@@ -4,6 +4,7 @@ set -euo pipefail
 manifest_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 core="${CORE_SOURCE:-/work/sagetv}"
 fm="${MIM_SOURCE:-/project}"
+ffmpeg_plugin="${FFMPEG_PLUGIN_SOURCE:-/workspace/ffmpeg-plugin}"
 xmltv="${XMLTV_SOURCE:-/workspace/xmltv-import}"
 tmdb="${TMDB_SOURCE:-/workspace/tmdb}"
 container="${CONTAINER_SOURCE:-/workspace/container}"
@@ -23,10 +24,16 @@ opendct_status="$output/test-results/opendct-live.status"
 runtime_validation_log="$output/test-results/runtime-validation.log"
 android_test_log="$output/test-results/android-client.log"
 tmdb_version="$(sed -n 's/^VERSION=//p' "$tmdb/release.properties" | tr -d '\r')"
+ffmpeg_plugin_version="$(sed -n 's/^VERSION=//p' "$ffmpeg_plugin/release.properties" | tr -d '\r')"
 
 test -s "$core/output/packages/sagetv-server-x86_64.tar.gz"
 test -s "$fm/output/linux-x64/ffmpeg_MIM"
 test -s "$fm/output/windows-x64/SageTVTranscoder.exe"
+test -s "$ffmpeg_plugin/output/packages/SageTVFFmpegPlugin-jar-$ffmpeg_plugin_version.zip"
+test -s "$ffmpeg_plugin/output/packages/SageTVFFmpegPlugin-system-linux-$ffmpeg_plugin_version.zip"
+test -s "$ffmpeg_plugin/output/packages/SageTVFFmpegPlugin-system-windows-x64-$ffmpeg_plugin_version.zip"
+test -s "$ffmpeg_plugin/output/packages/SageTVFFmpegPlugin-STVI-$ffmpeg_plugin_version.zip"
+test -s "$ffmpeg_plugin/output/packages/SHA256SUMS"
 test -s "$xmltv/output/packages/XMLTVImportPlugin.jar"
 test -s "$tmdb/output/packages/OpenSageTVVibeTMDB-plugin.zip"
 test -s "$tmdb/output/packages/OpenSageTVVibeTMDB-plugin-$tmdb_version.zip"
@@ -60,19 +67,22 @@ mkdir -p \
   "$release_dir/components/core" \
   "$release_dir/components/ffmpeg-mim/linux-x64" \
   "$release_dir/components/ffmpeg-mim/windows-x64" \
+  "$release_dir/components/ffmpeg-plugin" \
   "$release_dir/components/xmltv" \
   "$release_dir/components/tmdb" \
   "$release_dir/components/android-client" \
   "$release_dir/components/sagemc" \
   "$release_dir/images" "$release_dir/sbom" \
   "$release_dir/test-results" \
-  "$release_dir/docs/build-env" "$release_dir/docs/container" "$release_dir/docs/android-client" "$release_dir/docs/sagemc" "$release_dir/docs/tmdb" \
+  "$release_dir/docs/build-env" "$release_dir/docs/container" "$release_dir/docs/android-client" "$release_dir/docs/sagemc" "$release_dir/docs/tmdb" "$release_dir/docs/ffmpeg-plugin" \
   "$package_dir" "$image_export_cache"
 
 cp "$core/output/packages/sagetv-server-x86_64.tar.gz" "$release_dir/components/core/"
 cp "$core/output/BUILD_REPORT.md" "$release_dir/components/core/BUILD_REPORT.md"
 cp -a "$fm/output/linux-x64/." "$release_dir/components/ffmpeg-mim/linux-x64/"
 cp -a "$fm/output/windows-x64/." "$release_dir/components/ffmpeg-mim/windows-x64/"
+cp -a "$ffmpeg_plugin/output/packages/." "$release_dir/components/ffmpeg-plugin/"
+cp "$ffmpeg_plugin/release.properties" "$release_dir/components/ffmpeg-plugin/"
 cp "$xmltv/output/packages/XMLTVImportPlugin.jar" "$release_dir/components/xmltv/"
 cp -a "$xmltv/output/config-examples" "$release_dir/components/xmltv/"
 cp -a "$xmltv/output/test-results" "$release_dir/components/xmltv/"
@@ -114,6 +124,9 @@ cp "$sagemc/README.md" "$sagemc/HANDOFF.md" "$sagemc/CHANGELOG.md" \
 cp "$tmdb/README.md" "$tmdb/HANDOFF.md" "$tmdb/CHANGELOG.md" \
   "$tmdb/THIRD_PARTY_NOTICES.md" "$tmdb/docs/TMDB_ATTRIBUTION.md" \
   "$release_dir/docs/tmdb/"
+cp "$ffmpeg_plugin/README.md" "$ffmpeg_plugin/HANDOFF.md" \
+  "$ffmpeg_plugin/CHANGELOG.md" "$ffmpeg_plugin/THIRD_PARTY_NOTICES.md" \
+  "$ffmpeg_plugin/docs/STVI_DESIGN.md" "$release_dir/docs/ffmpeg-plugin/"
 
 production_archive="$release_dir/images/opensagetv-vibe-server-u26-gpu-j11.tar.gz"
 debug_archive="$release_dir/images/opensagetv-vibe-server-u26-gpu-j11-debug.tar.gz"
@@ -194,6 +207,7 @@ python3 "$manifest_root/scripts/generate-release-manifest.py" \
   --repo core "$core" \
   --repo container "$container" \
   --repo ffmpeg_mim "$fm" \
+  --repo ffmpeg_plugin "$ffmpeg_plugin" \
   --repo xmltv_import "$xmltv" \
   --repo tmdb "$tmdb" \
   --repo logo "$logo" \
@@ -205,6 +219,7 @@ python3 "$manifest_root/scripts/generate-release-manifest.py" \
   --android-version-file "$android/VERSION" \
   --sagemc-version-file "$sagemc/VERSION" \
   --tmdb-version-file "$tmdb/release.properties" \
+  --ffmpeg-plugin-version-file "$ffmpeg_plugin/release.properties" \
   --output "$release_dir/release-manifest.json"
 
 cat > "$release_dir/RELEASE_REPORT.md" <<EOF
@@ -228,7 +243,7 @@ cat > "$release_dir/RELEASE_REPORT.md" <<EOF
 
 | Release stage | Result |
 |---|---|
-| Core, FFmpeg/MIM, XMLTV, TMDB, Android, and SageMC artifact staging | PASS |
+| Core, FFmpeg/MIM, FFmpeg plugin, XMLTV, TMDB, Android, and SageMC artifact staging | PASS |
 | Shared SageMC/XMLTV TMDB consumer stress | PASS |
 | Android unit/static tests, validation, and debug APK build | PASS |
 | Android device commissioning | SKIPPED - not part of headless unified all |

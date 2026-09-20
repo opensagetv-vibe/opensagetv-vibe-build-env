@@ -7,7 +7,7 @@ Read `AGENTS.md`, `README.md`, `TASKS.md`, and `WORKFLOW.md`, then run
 handoff packages use `artifacts/downloads` and the root update/package scripts.
 Windows handoff wrappers must retain the `-ProjectRoot "%~dp0."` form; the dot
 is intentional protection against native PowerShell's quoted trailing-backslash
-argument parsing. The ten-repository workflow contract enforces it.
+argument parsing. The eleven-repository workflow contract enforces it.
 
 ## Current state
 
@@ -38,7 +38,7 @@ version checks. The logo pipeline passes all three unit tests, generates and
 validates 25 Android-owned resources, installs them with bounded manifest
 updates, and the packaged debug APK contains the complete drawable, launcher,
 round-launcher, adaptive-foreground, and adaptive-background resource set. The
-Android 1,286-file project manifest and complete ten-repository handoff
+Android 1,286-file project manifest and complete eleven-repository handoff
 workflow pass. A real 1920x1080i MPEG-2 TS fixture with synchronized visual/
 audio pulses, dual AC-3, CEA-608/708, and its Comskip sidecar was generated and
 probed inside that container. `dev.cmd test` and `dev.cmd validate` pass.
@@ -80,7 +80,7 @@ Windows and WSL calls from the same checkout continue to reuse it.
 The common workflow contract and isolated update-runner self-test pass on
 2026-08-28. The latter proves automatic and explicit changed-files ZIP
 application, all test/validate/build/install gates, and completed-state resume.
-Use `create_workspace_handoff_zip.cmd` to produce the complete ten-project
+Use `create_workspace_handoff_zip.cmd` to produce the complete eleven-project
 commissioning bundle under `artifacts/downloads`. Use
 `install_workspace_handoff_zip.cmd [ZIP] [PROJECTS_ROOT]` when the outer ZIP
 also needs to be extracted before applying its verified packages and running
@@ -103,6 +103,16 @@ actual SageMC and XMLTV adapters against one shared service fixture. Four SageMC
 and four XMLTV workers completed 4,000 adapter operations and 12,000 service
 calls without failure, proving simultaneous consumer isolation before runtime
 commissioning.
+
+On 2026-09-20 `opensagetv-vibe-SageTVFFmpegPlugin` became the eleventh
+mounted component. The reusable container exposes its test, validation, build,
+and all commands without an image rebuild. Checkout reconstruction, workspace
+handoff ordering, release artifact staging, exact repository/version
+provenance, SPDX coverage, and build-environment documentation now include the
+plugin. Physical commissioning on `.232` and the non-Pro Fire TV verified the
+stock-Sage.jar install/upgrade/repair/uninstall contract, VAAPI Fixed/MIM
+recorded playback, two live channel changes, and HDMI video/audio continuity.
+Publishing remains prohibited until the user gives final approval.
 
 Java 11 remains the default server toolchain, while Android commands select
 JDK 17 and the frozen comparison command selects JDK 8 per process. The
@@ -144,7 +154,7 @@ through this installed image: 174 scaffold/static tests, 35 MCP tests, full
 source validation, and a clean 60-task build pass. Its current APK SHA-256 is
 `60e1d19ab15968ef48e24691cfd14f8998ce0bc6e6e8bda960f6d65e8d8aa668`.
 
-The ten repositories now share the same location-independent root workflow,
+The eleven repositories now share the same location-independent root workflow,
 resumable update gates, package directory, takeover documents, and
 `create_ai_handoff_zip.cmd`. An isolated temporary Git fixture passed package
 creation, path/hash/manifest validation, extraction, all four gates, and a

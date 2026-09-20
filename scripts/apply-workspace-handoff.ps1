@@ -18,6 +18,7 @@ $order=@(
   'opensagetv-vibe-build-env',
   'opensagetv-vibe-core',
   'opensagetv-vibe-ffmpeg-mim',
+  'opensagetv-vibe-SageTVFFmpegPlugin',
   'opensagetv-vibe-xmltv-import',
   'opensagetv-vibe-tmdb',
   'opensagetv-vibe-logo',

@@ -25,7 +25,7 @@ All repositories use the takeover/update contract documented in
 `dev.cmd`/`dev.sh`, `update.cmd`/`update.sh`, and
 `create_ai_handoff_zip.cmd` interface as every component.
 
-Create one handoff containing the verified changed-files packages for all ten
+Create one handoff containing the verified changed-files packages for all eleven
 sibling repositories with:
 
 ```bat
@@ -50,6 +50,7 @@ opensagetv-vibe-build-env/
 opensagetv-vibe-container/
 opensagetv-vibe-core/
 opensagetv-vibe-ffmpeg-mim/
+opensagetv-vibe-SageTVFFmpegPlugin/
 opensagetv-vibe-xmltv-import/
 opensagetv-vibe-tmdb/
 opensagetv-vibe-logo/
@@ -124,21 +125,23 @@ an SMB2/SMB3 commissioning share without adding a second utility container.
 3. Linux x64 and Windows x64 FFmpeg 9.0.1/MIM builds.
 4. MIM lifecycle, growing-file, join-in-progress, A/V integrity, and teardown
    tests.
-5. XMLTV compilation and all importer regression tests.
-6. Reusable TMDB service Java 8 compilation, SQLite/cache/API regression tests,
+5. Stock-Sage.jar FFmpeg Standard-plugin/STVi tests and deterministic Linux/
+   Windows plugin packaging.
+6. XMLTV compilation and all importer regression tests.
+7. Reusable TMDB service Java 8 compilation, SQLite/cache/API regression tests,
    and artifact packaging.
-7. Canonical logo generation, 25-resource validation, and SHA-verified Android
+8. Canonical logo generation, 25-resource validation, and SHA-verified Android
    resource synchronization.
-8. SageMC Studio graph/API/reference tests and deterministic plugin packaging.
-9. A simultaneous 4,000-operation SageMC/XMLTV shared-TMDB adapter stress run.
-10. Android client unit/static and MCP tests, source validation, and a clean
+9. SageMC Studio graph/API/reference tests and deterministic plugin packaging.
+10. A simultaneous 4,000-operation SageMC/XMLTV shared-TMDB adapter stress run.
+11. Android client unit/static and MCP tests, source validation, and a clean
    deterministic debug APK build under JDK 17. Device operations are excluded.
-11. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
-12. Linux/amd64 production and debug runtime image builds.
-13. Clean-appdata health, supervised JVM recovery, repeated container restart
+12. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
+13. Linux/amd64 production and debug runtime image builds.
+14. Clean-appdata health, supervised JVM recovery, repeated container restart
    soak, SageTV UDP discovery, TCP service, XMLTV selection, OpenDCT protocol,
    lifecycle metrics, and resource-cleanup validation.
-14. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
+15. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
    compressed Docker exports, and the versioned release bundle.
 
 Any failed stage writes `BUILD FAILED`, records the failed stage in
@@ -156,6 +159,7 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 | `ffmpeg-linux`, `ffmpeg-windows` | Build one FFmpeg/MIM target |
 | `ffmpeg-info` | Validate both toolchains, Docker access, and container source mount |
 | `test-mim` | Run all non-Android MIM lifecycle and real-media tests |
+| `ffmpeg-plugin-test`, `ffmpeg-plugin-validate`, `ffmpeg-plugin-build`, `ffmpeg-plugin-all` | Test, validate, package, or run all gates for the stock-server FFmpeg plugin |
 | `xmltv` | Build and test only the XMLTV importer JAR |
 | `tmdb-test`, `tmdb-validate`, `tmdb-build`, `tmdb-all` | Test, validate, package, or run all gates for the reusable TMDB service |
 | `tmdb-consumer-test` | Stress the real SageMC and XMLTV adapters against one shared TMDB service |
@@ -257,7 +261,8 @@ output/packages/opensagetv-vibe-9.2.10-u26-j11.tar.zst
 output/releases/opensagetv-vibe-9.2.10-u26-j11/
 ```
 
-The release directory contains Core, Linux/Windows FFmpeg/MIM, XMLTV, the
+The release directory contains Core, Linux/Windows FFmpeg/MIM, the stock-server
+FFmpeg plugin packages/manifests, XMLTV, the
 standalone TMDB plugin ZIP and dependency JARs, the Android debug APK and test evidence, the CA
 template, separated build/container documentation, two compressed Docker image
 archives, SPDX SBOMs, exact commits/image IDs/artifact hashes, and a release
