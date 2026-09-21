@@ -9,6 +9,8 @@ tmdb_project="${OPENSAGETV_VIBE_TMDB_PROJECT_ROOT:-$projects/opensagetv-vibe-tmd
 tmdb_project="$(cd "$tmdb_project" && pwd)"
 ffmpeg_plugin_project="${OPENSAGETV_VIBE_FFMPEG_PLUGIN_PROJECT_ROOT:-$projects/opensagetv-vibe-SageTVFFmpegPlugin}"
 ffmpeg_plugin_project="$(cd "$ffmpeg_plugin_project" && pwd)"
+core_mcp_project="${OPENSAGETV_VIBE_CORE_MCP_PROJECT_ROOT:-$projects/opensagetv-vibe-core-MCP-Plugin}"
+core_mcp_project="$(cd "$core_mcp_project" && pwd)"
 image="${OPENSAGETV_VIBE_BUILD_IMAGE:-opensagetv-vibe-build-env:u26-j11}"
 container="${OPENSAGETV_VIBE_DEV_CONTAINER:-opensagetv-vibe-dev}"
 ffmpeg_commit="${OPENSAGETV_VIBE_FFMPEG_COMMIT:-bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa}"
@@ -40,6 +42,7 @@ projects_id="$(workspace_id "$projects")"
 android_project_id="$(workspace_id "$android_project")"
 sagemc_project_id="$(workspace_id "$sagemc_project")"
 tmdb_project_id="$(workspace_id "$tmdb_project")"
+core_mcp_project_id="$(workspace_id "$core_mcp_project")"
 
 image_build() {
   docker buildx build --load --progress=plain \
@@ -66,7 +69,7 @@ container_remove() {
 }
 container_ensure() {
   image_ensure
-  local desired_image current_image current_projects current_android current_sagemc current_tmdb running
+  local desired_image current_image current_projects current_android current_sagemc current_tmdb current_core_mcp running
   desired_image="$(docker image inspect "$image" --format '{{.Id}}')"
   if docker container inspect "$container" >/dev/null 2>&1; then
     current_image="$(docker inspect "$container" --format '{{.Image}}')"
@@ -93,6 +96,12 @@ container_ensure() {
             if [[ "$current_tmdb" != "$tmdb_project_id" ]]; then
               echo "Recreating $container because the active TMDB checkout changed."
               container_remove
+            else
+              current_core_mcp="$(docker inspect "$container" --format '{{index .Config.Labels "org.opensagetv.vibe.core-mcp-project-root"}}')"
+              if [[ "$current_core_mcp" != "$core_mcp_project_id" ]]; then
+                echo "Recreating $container because the active Core MCP checkout changed."
+                container_remove
+              fi
             fi
           fi
         fi
@@ -106,12 +115,14 @@ container_ensure() {
       --label "org.opensagetv.vibe.android-project-root=$android_project_id" \
       --label "org.opensagetv.vibe.sagemc-project-root=$sagemc_project_id" \
       --label "org.opensagetv.vibe.tmdb-project-root=$tmdb_project_id" \
+      --label "org.opensagetv.vibe.core-mcp-project-root=$core_mcp_project_id" \
       --entrypoint sleep \
       -v opensagetv-vibe-gradle-cache:/work/.gradle \
       -v opensagetv-vibe-ccache:/work/.ccache \
       -v "$projects/opensagetv-vibe-core:/work/sagetv" \
       -v "$projects/opensagetv-vibe-ffmpeg-mim:/project" \
       -v "$ffmpeg_plugin_project:/workspace/ffmpeg-plugin" \
+      -v "$core_mcp_project:/workspace/core-mcp-plugin" \
       -v "$projects/opensagetv-vibe-xmltv-import:/workspace/xmltv-import" \
       -v "$tmdb_project:/workspace/tmdb" \
       -v "$projects/opensagetv-vibe-container:/workspace/container" \
@@ -146,7 +157,7 @@ case "$cmd" in
     ;;
   remove-dev) container_remove ;;
   shell) container_ensure; exec docker exec -it "$container" bash "$@" ;;
-  all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|ffmpeg-runtime-package|ffmpeg-plugin-test|ffmpeg-plugin-validate|ffmpeg-plugin-build|ffmpeg-plugin-all|xmltv|tmdb-test|tmdb-validate|tmdb-build|tmdb-all|tmdb-consumer-test|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
+  all|core|core-mcp-test|core-mcp-validate|core-mcp-build|core-mcp-all|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|ffmpeg-runtime-package|ffmpeg-plugin-test|ffmpeg-plugin-validate|ffmpeg-plugin-build|ffmpeg-plugin-all|xmltv|tmdb-test|tmdb-validate|tmdb-build|tmdb-all|tmdb-consumer-test|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
     container_ensure
     # Run the bind-mounted controller so orchestration changes do not require
     # rebuilding the dependency image.
@@ -162,7 +173,7 @@ case "$cmd" in
       bash /workspace/release-manifest/scripts/dev-entrypoint.sh "$cmd" "$@"
     ;;
   *)
-    echo "Usage: $0 {image|start|stop|remove-dev|all|core|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|ffmpeg-runtime-package|ffmpeg-plugin-test|ffmpeg-plugin-validate|ffmpeg-plugin-build|ffmpeg-plugin-all|xmltv|tmdb-test|tmdb-validate|tmdb-build|tmdb-all|tmdb-consumer-test|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean|shell}" >&2
+    echo "Usage: $0 {image|start|stop|remove-dev|all|core|core-mcp-test|core-mcp-validate|core-mcp-build|core-mcp-all|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|ffmpeg-runtime-package|ffmpeg-plugin-test|ffmpeg-plugin-validate|ffmpeg-plugin-build|ffmpeg-plugin-all|xmltv|tmdb-test|tmdb-validate|tmdb-build|tmdb-all|tmdb-consumer-test|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean|shell}" >&2
     exit 2
     ;;
 esac

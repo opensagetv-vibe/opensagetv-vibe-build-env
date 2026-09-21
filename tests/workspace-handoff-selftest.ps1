@@ -8,6 +8,7 @@ $repos=@(
   'opensagetv-vibe-build-env','opensagetv-vibe-core','opensagetv-vibe-container',
   'opensagetv-vibe-ffmpeg-mim','opensagetv-vibe-xmltv-import',
   'opensagetv-vibe-SageTVFFmpegPlugin',
+  'opensagetv-vibe-core-MCP-Plugin',
   'opensagetv-vibe-tmdb',
   'opensagetv-vibe-logo','opensagetv-vibe-android-client',
   'opensagetv-vibe-sagemc','opensagetv-vibe-archive'
@@ -78,7 +79,7 @@ echo "$1" >> "$root/artifacts/gates.log"
     $gates=@(Get-Content (Join-Path $target 'artifacts/gates.log'))
     if(($gates -join ',') -ne 'test,validate,build,install'){throw "$repo gates were $($gates -join ',')"}
   }
-  Write-Output 'PASS: outer ZIP extraction and eleven-repository test/validate/build/install commissioning'
+  Write-Output 'PASS: outer ZIP extraction and twelve-repository test/validate/build/install commissioning'
 } finally {
   if(Test-Path -LiteralPath $temp){Remove-Item -LiteralPath $temp -Recurse -Force}
 }

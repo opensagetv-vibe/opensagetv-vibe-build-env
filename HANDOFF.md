@@ -7,7 +7,7 @@ Read `AGENTS.md`, `README.md`, `TASKS.md`, and `WORKFLOW.md`, then run
 handoff packages use `artifacts/downloads` and the root update/package scripts.
 Windows handoff wrappers must retain the `-ProjectRoot "%~dp0."` form; the dot
 is intentional protection against native PowerShell's quoted trailing-backslash
-argument parsing. The eleven-repository workflow contract enforces it.
+argument parsing. The twelve-repository workflow contract enforces it.
 
 ## Current state
 
@@ -38,17 +38,17 @@ version checks. The logo pipeline passes all three unit tests, generates and
 validates 25 Android-owned resources, installs them with bounded manifest
 updates, and the packaged debug APK contains the complete drawable, launcher,
 round-launcher, adaptive-foreground, and adaptive-background resource set. The
-Android 1,286-file project manifest and complete eleven-repository handoff
+Android 1,286-file project manifest and complete twelve-repository handoff
 workflow pass. A real 1920x1080i MPEG-2 TS fixture with synchronized visual/
 audio pulses, dual AC-3, CEA-608/708, and its Comskip sidecar was generated and
 probed inside that container. `dev.cmd test` and `dev.cmd validate` pass.
 
 The current canonical local runtime images are production
-`sha256:89af7475dec66aef328113f9de3b33bf24a656e8b4b6de44153429e4e0d1613a`
+`sha256:ac844ebf288eab9b3d9be5a77ef5038b5bb179e76ca44ffad3c3b8530bbd8286`
 and debug
-`sha256:89d55c387a27cacf67c3021c11123cd97b16a897fd2153a9063f3d83c064f127`.
+`sha256:f9b4f5177b003d7f5eb2fafa6dbe7b0d32993f5e60c9bdc3e39e958b51fd8dc2`.
 Both record runtime-environment fingerprint
-`ffc4bbb4b0e3068245e1dc4abb25441e7be1e0b819510a26b9c278a49c8dfcfd`.
+`4e0bae1443cf5f113495d3d3646912ec641c022a3ae4ba314fa9ec8ff5f8f9b7`.
 `runtime-image-status` reports `runtime_image_rebuild_needed=false`, and a
 normal `runtime-images` invocation exits without rebuilding. Project cleanup
 reports zero dangling Vibe images.
@@ -80,7 +80,7 @@ Windows and WSL calls from the same checkout continue to reuse it.
 The common workflow contract and isolated update-runner self-test pass on
 2026-08-28. The latter proves automatic and explicit changed-files ZIP
 application, all test/validate/build/install gates, and completed-state resume.
-Use `create_workspace_handoff_zip.cmd` to produce the complete eleven-project
+Use `create_workspace_handoff_zip.cmd` to produce the complete twelve-project
 commissioning bundle under `artifacts/downloads`. Use
 `install_workspace_handoff_zip.cmd [ZIP] [PROJECTS_ROOT]` when the outer ZIP
 also needs to be extracted before applying its verified packages and running
@@ -113,6 +113,18 @@ plugin. Physical commissioning on `.232` and the non-Pro Fire TV verified the
 stock-Sage.jar install/upgrade/repair/uninstall contract, VAAPI Fixed/MIM
 recorded playback, two live channel changes, and HDMI video/audio continuity.
 Publishing remains prohibited until the user gives final approval.
+
+On 2026-09-20 `opensagetv-vibe-core-MCP-Plugin` became the twelfth mounted and
+release-tracked component. Every production/debug Vibe server image now requires
+its package during artifact staging, seeds its JAR into persistent appdata, and
+registers the Standard plugin while preserving local security settings. The
+clean runtime gate proved plugin loading and authenticated loopback health, and
+the commissioned `.232` container loads version `0.1.1` from the rebuilt image
+without modifying the plugin JAR in appdata by hand. The final production image
+was loaded there with exported config ID
+`sha256:c8813f8babe45a47293a15d2606809c5de49bfc5470dfce94a55e5c5107873b6`;
+the server and plugin JAR hashes plus HTTP health match the local validated
+build.
 
 Java 11 remains the default server toolchain, while Android commands select
 JDK 17 and the frozen comparison command selects JDK 8 per process. The
@@ -154,7 +166,7 @@ through this installed image: 174 scaffold/static tests, 35 MCP tests, full
 source validation, and a clean 60-task build pass. Its current APK SHA-256 is
 `60e1d19ab15968ef48e24691cfd14f8998ce0bc6e6e8bda960f6d65e8d8aa668`.
 
-The eleven repositories now share the same location-independent root workflow,
+The twelve repositories now share the same location-independent root workflow,
 resumable update gates, package directory, takeover documents, and
 `create_ai_handoff_zip.cmd`. An isolated temporary Git fixture passed package
 creation, path/hash/manifest validation, extraction, all four gates, and a

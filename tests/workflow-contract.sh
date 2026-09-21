@@ -9,6 +9,7 @@ repos=(
   opensagetv-vibe-container
   opensagetv-vibe-ffmpeg-mim
   opensagetv-vibe-SageTVFFmpegPlugin
+  opensagetv-vibe-core-MCP-Plugin
   opensagetv-vibe-xmltv-import
   opensagetv-vibe-tmdb
   opensagetv-vibe-logo
@@ -81,3 +82,10 @@ grep -Fq -- '--ffmpeg-plugin-version-file "$ffmpeg_plugin/release.properties"' "
 grep -Fq '"ffmpeg_plugin": "https://github.com/opensagetv-vibe/opensagetv-vibe-SageTVFFmpegPlugin.git"' \
   "$build_env/scripts/generate-release-manifest.py"
 echo 'PASS: unified release stages and records the stock-server FFmpeg plugin'
+
+grep -Fq 'components/core-mcp-plugin' "$build_env/scripts/package-release.sh"
+grep -Fq -- '--repo core_mcp "$core_mcp"' "$build_env/scripts/package-release.sh"
+grep -Fq -- '--core-mcp-version-file "$core_mcp/release.properties"' "$build_env/scripts/package-release.sh"
+grep -Fq '"core_mcp": "https://github.com/opensagetv-vibe/opensagetv-vibe-core-MCP-Plugin.git"' \
+  "$build_env/scripts/generate-release-manifest.py"
+echo 'PASS: unified release stages and records the stock-server Core MCP plugin'

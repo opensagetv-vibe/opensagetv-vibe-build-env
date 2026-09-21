@@ -21,6 +21,7 @@ repositories=(
   opensagetv-vibe-container
   opensagetv-vibe-ffmpeg-mim
   opensagetv-vibe-SageTVFFmpegPlugin
+  opensagetv-vibe-core-MCP-Plugin
   opensagetv-vibe-xmltv-import
   opensagetv-vibe-tmdb
   opensagetv-vibe-logo
@@ -36,6 +37,7 @@ manifest_name() {
     opensagetv-vibe-container) echo container ;;
     opensagetv-vibe-ffmpeg-mim) echo ffmpeg_mim ;;
     opensagetv-vibe-SageTVFFmpegPlugin) echo ffmpeg_plugin ;;
+    opensagetv-vibe-core-MCP-Plugin) echo core_mcp ;;
     opensagetv-vibe-xmltv-import) echo xmltv_import ;;
     opensagetv-vibe-tmdb) echo tmdb ;;
     opensagetv-vibe-logo) echo logo ;;
@@ -71,7 +73,7 @@ for repository in "${repositories[@]}"; do
   fi
 
   branch=ubuntu26-modern-build
-  if [[ "$repository" == opensagetv-vibe-archive || "$repository" == opensagetv-vibe-logo || "$repository" == opensagetv-vibe-android-client || "$repository" == opensagetv-vibe-sagemc || "$repository" == opensagetv-vibe-tmdb || "$repository" == opensagetv-vibe-SageTVFFmpegPlugin ]]; then
+  if [[ "$repository" == opensagetv-vibe-archive || "$repository" == opensagetv-vibe-logo || "$repository" == opensagetv-vibe-android-client || "$repository" == opensagetv-vibe-sagemc || "$repository" == opensagetv-vibe-tmdb || "$repository" == opensagetv-vibe-SageTVFFmpegPlugin || "$repository" == opensagetv-vibe-core-MCP-Plugin ]]; then
     branch=main
   fi
   target="$workspace/$repository"

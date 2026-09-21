@@ -25,7 +25,7 @@ All repositories use the takeover/update contract documented in
 `dev.cmd`/`dev.sh`, `update.cmd`/`update.sh`, and
 `create_ai_handoff_zip.cmd` interface as every component.
 
-Create one handoff containing the verified changed-files packages for all eleven
+Create one handoff containing the verified changed-files packages for all twelve
 sibling repositories with:
 
 ```bat
@@ -51,6 +51,7 @@ opensagetv-vibe-container/
 opensagetv-vibe-core/
 opensagetv-vibe-ffmpeg-mim/
 opensagetv-vibe-SageTVFFmpegPlugin/
+opensagetv-vibe-core-MCP-Plugin/
 opensagetv-vibe-xmltv-import/
 opensagetv-vibe-tmdb/
 opensagetv-vibe-logo/
@@ -127,21 +128,23 @@ an SMB2/SMB3 commissioning share without adding a second utility container.
    tests.
 5. Stock-Sage.jar FFmpeg Standard-plugin/STVi tests and deterministic Linux/
    Windows plugin packaging.
-6. XMLTV compilation and all importer regression tests.
-7. Reusable TMDB service Java 8 compilation, SQLite/cache/API regression tests,
+6. Stock-Sage.jar Core MCP Standard-plugin tests and deterministic packaging.
+7. XMLTV compilation and all importer regression tests.
+8. Reusable TMDB service Java 8 compilation, SQLite/cache/API regression tests,
    and artifact packaging.
-8. Canonical logo generation, 25-resource validation, and SHA-verified Android
+9. Canonical logo generation, 25-resource validation, and SHA-verified Android
    resource synchronization.
-9. SageMC Studio graph/API/reference tests and deterministic plugin packaging.
-10. A simultaneous 4,000-operation SageMC/XMLTV shared-TMDB adapter stress run.
-11. Android client unit/static and MCP tests, source validation, and a clean
+10. SageMC Studio graph/API/reference tests and deterministic plugin packaging.
+11. A simultaneous 4,000-operation SageMC/XMLTV shared-TMDB adapter stress run.
+12. Android client unit/static and MCP tests, source validation, and a clean
    deterministic debug APK build under JDK 17. Device operations are excluded.
-12. Exact-hash staging of Core, Linux MIM, and XMLTV runtime artifacts.
-13. Linux/amd64 production and debug runtime image builds.
-14. Clean-appdata health, supervised JVM recovery, repeated container restart
+13. Exact-hash staging of Core, the Core MCP plugin, Linux MIM, and XMLTV
+   runtime artifacts.
+14. Linux/amd64 production and debug runtime image builds.
+15. Clean-appdata health, supervised JVM recovery, repeated container restart
    soak, SageTV UDP discovery, TCP service, XMLTV selection, OpenDCT protocol,
    lifecycle metrics, and resource-cleanup validation.
-15. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
+16. Exact source/image/artifact manifest, SHA-256 files, SPDX 2.3 SBOMs,
    compressed Docker exports, and the versioned release bundle.
 
 Any failed stage writes `BUILD FAILED`, records the failed stage in
@@ -160,6 +163,7 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 | `ffmpeg-info` | Validate both toolchains, Docker access, and container source mount |
 | `test-mim` | Run all non-Android MIM lifecycle and real-media tests |
 | `ffmpeg-plugin-test`, `ffmpeg-plugin-validate`, `ffmpeg-plugin-build`, `ffmpeg-plugin-all` | Test, validate, package, or run all gates for the stock-server FFmpeg plugin |
+| `core-mcp-test`, `core-mcp-validate`, `core-mcp-build`, `core-mcp-all` | Test, validate, package, or run all gates for the stock-server Core MCP plugin |
 | `xmltv` | Build and test only the XMLTV importer JAR |
 | `tmdb-test`, `tmdb-validate`, `tmdb-build`, `tmdb-all` | Test, validate, package, or run all gates for the reusable TMDB service |
 | `tmdb-consumer-test` | Stress the real SageMC and XMLTV adapters against one shared TMDB service |
@@ -262,7 +266,7 @@ output/releases/opensagetv-vibe-9.2.10-u26-j11/
 ```
 
 The release directory contains Core, Linux/Windows FFmpeg/MIM, the stock-server
-FFmpeg plugin packages/manifests, XMLTV, the
+FFmpeg and Core MCP plugin packages/manifests, XMLTV, the
 standalone TMDB plugin ZIP and dependency JARs, the Android debug APK and test evidence, the CA
 template, separated build/container documentation, two compressed Docker image
 archives, SPDX SBOMs, exact commits/image IDs/artifact hashes, and a release
@@ -288,3 +292,9 @@ ID automatically creates a new export.
 MIM is included but remains `MIM_ENABLED=false` until the separate Android
 MiniClient and physical AMD/NVIDIA release gates pass. Hardware decode defaults
 to enabled and falls back to software when device initialization is unavailable.
+
+Every Vibe server image includes the exact built Core MCP plugin as a required
+seeded component. Existing appdata receives it when absent or when the bundled
+plugin revision changes; user enablement, listener, LAN-access, and bearer-token
+settings are preserved. Runtime validation requires SageTV to load it and its
+loopback `/health` endpoint to return success before an image passes.

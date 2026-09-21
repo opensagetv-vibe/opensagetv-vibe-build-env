@@ -6,6 +6,7 @@ shift || true
 core=/work/sagetv
 fm=/project
 ffmpeg_plugin=/workspace/ffmpeg-plugin
+core_mcp=/workspace/core-mcp-plugin
 xmltv=/workspace/xmltv-import
 tmdb=/workspace/tmdb
 container=/workspace/container
@@ -49,6 +50,7 @@ validate_environment() {
   test -f "$sagemc/source/dev/SageMC_169.xml"
   test -f "$tmdb/source/main/java/org/opensagetv/vibe/tmdb/TmdbMetadataService.java"
   test -f "$ffmpeg_plugin/src/main/java/org/opensagetv/vibe/ffmpeg/SageTVFFmpegPlugin.java"
+  test -f "$core_mcp/src/main/java/org/opensagetv/vibe/coremcp/SageTVCoreMcpPlugin.java"
   command -v docker >/dev/null
   docker buildx version >/dev/null
   command -v smbclient >/dev/null
@@ -200,13 +202,15 @@ runtime_stage() {
   env \
     CORE_PACKAGE="$core/output/packages/sagetv-server-x86_64.tar.gz" \
     XMLTV_OUTPUT="$xmltv/output" \
+    CORE_MCP_OUTPUT="$core_mcp/output" \
+    CORE_MCP_SOURCE="$core_mcp" \
     bash "$container/stage-artifacts.sh"
 }
 
 runtime_images() {
   env \
     SKIP_ARTIFACT_STAGE=true \
-    CORE_SOURCE="$core" XMLTV_SOURCE="$xmltv" \
+    CORE_SOURCE="$core" XMLTV_SOURCE="$xmltv" CORE_MCP_SOURCE="$core_mcp" \
     OPENSAGETV_VIBE_SERVER_IMAGE="$production_image" \
     OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE="$debug_image" \
     bash "$container/build.sh"
@@ -234,6 +238,7 @@ runtime_test() {
   env \
     CORE_SOURCE="$core" \
     XMLTV_SOURCE="$xmltv" \
+    CORE_MCP_SOURCE="$core_mcp" \
     OPENDCT_STATUS_FILE="$manifest/output/test-results/opendct-live.status" \
     OPENSAGETV_VIBE_SERVER_IMAGE="$production_image" \
     OPENSAGETV_VIBE_SERVER_DEBUG_IMAGE="$debug_image" \
@@ -268,7 +273,8 @@ runtime_update_test() {
 
 release_package() {
   env \
-    CORE_SOURCE="$core" MIM_SOURCE="$fm" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
+    CORE_SOURCE="$core" MIM_SOURCE="$fm" FFMPEG_PLUGIN_SOURCE="$ffmpeg_plugin" \
+    CORE_MCP_SOURCE="$core_mcp" XMLTV_SOURCE="$xmltv" TMDB_SOURCE="$tmdb" \
     CONTAINER_SOURCE="$container" LOGO_SOURCE="$logo" ANDROID_SOURCE="$android" \
     SAGEMC_SOURCE="$sagemc" \
     OPENSAGETV_VIBE_SERVER_IMAGE="$production_image" \
@@ -350,7 +356,7 @@ run_runtime_all() {
 
 configure_safe_directories() {
   local path
-  for path in "$core" "$fm" "$ffmpeg_plugin" "$xmltv" "$tmdb" "$container" "$logo" "$android" "$sagemc" "$manifest"; do
+  for path in "$core" "$fm" "$ffmpeg_plugin" "$core_mcp" "$xmltv" "$tmdb" "$container" "$logo" "$android" "$sagemc" "$manifest"; do
     [[ -d "$path/.git" ]] || continue
     if ! git config --global --get-all safe.directory 2>/dev/null | grep -Fqx "$path"; then
       git config --global --add safe.directory "$path"
@@ -388,6 +394,19 @@ case "$cmd" in
     bash scripts/test.sh
     bash scripts/validate.sh
     env MIM_REPO_ROOT="$fm" bash scripts/package-dev.sh
+    ;;
+  core-mcp-test)
+    cd "$core_mcp"
+    exec env SAGETV_JAR="$ffmpeg_plugin/.deps/stock/Sage.jar" python3 scripts/project.py test
+    ;;
+  core-mcp-validate) cd "$core_mcp"; exec python3 scripts/project.py validate ;;
+  core-mcp-build)
+    cd "$core_mcp"
+    exec env SAGETV_JAR="$ffmpeg_plugin/.deps/stock/Sage.jar" python3 scripts/project.py package
+    ;;
+  core-mcp-all)
+    cd "$core_mcp"
+    exec env SAGETV_JAR="$ffmpeg_plugin/.deps/stock/Sage.jar" python3 scripts/project.py all
     ;;
   xmltv) cd "$xmltv"; exec bash scripts/build.sh ;;
   tmdb-test) cd "$tmdb"; exec bash scripts/build.sh ;;
@@ -454,7 +473,7 @@ case "$cmd" in
   clean)
     cd "$core"; bash tests/linux-modern/clean.sh
     android_clean
-    rm -rf "$fm/output" "$ffmpeg_plugin/build" "$ffmpeg_plugin/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$tmdb/output" "$container/artifacts" "$logo/generated" "$sagemc/output"
+    rm -rf "$fm/output" "$ffmpeg_plugin/build" "$ffmpeg_plugin/output" "$core_mcp/build" "$core_mcp/dist" "$core_mcp/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$tmdb/output" "$container/artifacts" "$logo/generated" "$sagemc/output"
     echo 'Build outputs cleaned; reusable container, cache, and release images retained'
     ;;
   all)
@@ -468,6 +487,7 @@ case "$cmd" in
     run_stage 'MIM lifecycle and media-integrity tests' run_mim_suite
     run_stage 'MIM SageTV plugin runtime packages' package_mim_plugin_runtime
     run_stage 'Stock-server FFmpeg Standard plugin and STVi' bash -c "cd '$ffmpeg_plugin' && bash scripts/test.sh && bash scripts/validate.sh && MIM_REPO_ROOT='$fm' bash scripts/package-dev.sh"
+    run_stage 'Stock-server Core MCP Standard plugin' bash -c "cd '$core_mcp' && SAGETV_JAR='$ffmpeg_plugin/.deps/stock/Sage.jar' python3 scripts/project.py all"
     run_stage 'XMLTV compile, regression tests, and package' bash -c "cd '$xmltv' && bash scripts/build.sh"
     run_stage 'Reusable TMDB service compile, cache/HTTP tests, and package' bash -c "cd '$tmdb' && bash scripts/build.sh"
     run_stage 'SageMC Studio graph tests, validation, and package' bash -c "cd '$sagemc' && SAGETV_CORE_ROOT='$core' bash scripts/test.sh && SAGETV_CORE_ROOT='$core' bash scripts/build.sh"
@@ -486,6 +506,6 @@ case "$cmd" in
     ;;
   shell) exec bash "$@" ;;
   help|*)
-    echo 'Commands: all core ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim ffmpeg-runtime-package ffmpeg-plugin-test ffmpeg-plugin-validate ffmpeg-plugin-build ffmpeg-plugin-all xmltv tmdb-test tmdb-validate tmdb-build tmdb-all tmdb-consumer-test logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
+    echo 'Commands: all core core-mcp-test core-mcp-validate core-mcp-build core-mcp-all ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim ffmpeg-runtime-package ffmpeg-plugin-test ffmpeg-plugin-validate ffmpeg-plugin-build ffmpeg-plugin-all xmltv tmdb-test tmdb-validate tmdb-build tmdb-all tmdb-consumer-test logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
     ;;
 esac

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added `opensagetv-vibe-core-MCP-Plugin` as the twelfth unified component and
+  made it a required input to every Vibe runtime image. Checkout reconstruction,
+  reusable-container commands, workspace handoff, release staging, source and
+  version provenance, and workflow contracts now include it.
+- Added runtime seeding and preservation rules for the Core MCP plugin. Clean
+  runtime validation now requires SageTV to load the plugin and return a healthy
+  loopback endpoint before the container image can pass.
+
 - Added `opensagetv-vibe-SageTVFFmpegPlugin` as the eleventh unified component.
 - Completed its checkout, reusable-container command, workspace-handoff,
   release staging, exact-source manifest, SPDX, and documentation integration.
