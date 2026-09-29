@@ -11,6 +11,8 @@ ffmpeg_plugin_project="${OPENSAGETV_VIBE_FFMPEG_PLUGIN_PROJECT_ROOT:-$projects/o
 ffmpeg_plugin_project="$(cd "$ffmpeg_plugin_project" && pwd)"
 core_mcp_project="${OPENSAGETV_VIBE_CORE_MCP_PROJECT_ROOT:-$projects/opensagetv-vibe-core-MCP-Plugin}"
 core_mcp_project="$(cd "$core_mcp_project" && pwd)"
+web_client_project="${OPENSAGETV_VIBE_WEB_CLIENT_PROJECT_ROOT:-$projects/opensagetv-vibe-web-client-plugin}"
+web_client_project="$(cd "$web_client_project" && pwd)"
 image="${OPENSAGETV_VIBE_BUILD_IMAGE:-opensagetv-vibe-build-env:u26-j11}"
 container="${OPENSAGETV_VIBE_DEV_CONTAINER:-opensagetv-vibe-dev}"
 ffmpeg_commit="${OPENSAGETV_VIBE_FFMPEG_COMMIT:-bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa}"
@@ -43,6 +45,7 @@ android_project_id="$(workspace_id "$android_project")"
 sagemc_project_id="$(workspace_id "$sagemc_project")"
 tmdb_project_id="$(workspace_id "$tmdb_project")"
 core_mcp_project_id="$(workspace_id "$core_mcp_project")"
+web_client_project_id="$(workspace_id "$web_client_project")"
 
 image_build() {
   docker buildx build --load --progress=plain \
@@ -69,7 +72,7 @@ container_remove() {
 }
 container_ensure() {
   image_ensure
-  local desired_image current_image current_projects current_android current_sagemc current_tmdb current_core_mcp running
+  local desired_image current_image current_projects current_android current_sagemc current_tmdb current_core_mcp current_web_client running
   desired_image="$(docker image inspect "$image" --format '{{.Id}}')"
   if docker container inspect "$container" >/dev/null 2>&1; then
     current_image="$(docker inspect "$container" --format '{{.Image}}')"
@@ -101,6 +104,12 @@ container_ensure() {
               if [[ "$current_core_mcp" != "$core_mcp_project_id" ]]; then
                 echo "Recreating $container because the active Core MCP checkout changed."
                 container_remove
+              else
+                current_web_client="$(docker inspect "$container" --format '{{index .Config.Labels "org.opensagetv.vibe.web-client-project-root"}}')"
+                if [[ "$current_web_client" != "$web_client_project_id" ]]; then
+                  echo "Recreating $container because the active Web Client checkout changed."
+                  container_remove
+                fi
               fi
             fi
           fi
@@ -116,6 +125,7 @@ container_ensure() {
       --label "org.opensagetv.vibe.sagemc-project-root=$sagemc_project_id" \
       --label "org.opensagetv.vibe.tmdb-project-root=$tmdb_project_id" \
       --label "org.opensagetv.vibe.core-mcp-project-root=$core_mcp_project_id" \
+      --label "org.opensagetv.vibe.web-client-project-root=$web_client_project_id" \
       --entrypoint sleep \
       -v opensagetv-vibe-gradle-cache:/work/.gradle \
       -v opensagetv-vibe-ccache:/work/.ccache \
@@ -123,6 +133,7 @@ container_ensure() {
       -v "$projects/opensagetv-vibe-ffmpeg-mim:/project" \
       -v "$ffmpeg_plugin_project:/workspace/ffmpeg-plugin" \
       -v "$core_mcp_project:/workspace/core-mcp-plugin" \
+      -v "$web_client_project:/workspace/web-client-plugin" \
       -v "$projects/opensagetv-vibe-xmltv-import:/workspace/xmltv-import" \
       -v "$tmdb_project:/workspace/tmdb" \
       -v "$projects/opensagetv-vibe-container:/workspace/container" \
@@ -135,6 +146,15 @@ container_ensure() {
   fi
   running="$(docker inspect "$container" --format '{{.State.Running}}')"
   if [[ "$running" != true ]]; then docker start "$container" >/dev/null; fi
+  # A Windows/WSL launcher mismatch can preserve the expected labels while
+  # producing malformed bind destinations. Never run a build against such a
+  # container; the native Windows launcher can remove and recreate it safely.
+  if ! docker exec "$container" sh -lc \
+      'test -f /workspace/android-client/AGENTS.md && test -f /workspace/web-client-plugin/AGENTS.md && test -f /workspace/release-manifest/opensagetv-vibe-dev.sh'; then
+    echo "ERROR: $container has invalid workspace mounts." >&2
+    echo "Remove it and recreate it with the documented launcher for this host." >&2
+    return 2
+  fi
 }
 
 case "$cmd" in
@@ -157,7 +177,7 @@ case "$cmd" in
     ;;
   remove-dev) container_remove ;;
   shell) container_ensure; exec docker exec -it "$container" bash "$@" ;;
-  all|core|core-mcp-test|core-mcp-validate|core-mcp-build|core-mcp-all|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|ffmpeg-runtime-package|ffmpeg-plugin-test|ffmpeg-plugin-validate|ffmpeg-plugin-build|ffmpeg-plugin-all|xmltv|tmdb-test|tmdb-validate|tmdb-build|tmdb-all|tmdb-consumer-test|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
+  all|core|core-mcp-test|core-mcp-validate|core-mcp-build|core-mcp-all|ffmpeg-linux|ffmpeg-windows|ffmpeg-info|test-mim|ffmpeg-runtime-package|ffmpeg-plugin-test|ffmpeg-plugin-validate|ffmpeg-plugin-build|ffmpeg-plugin-all|web-client-test|web-client-validate|web-client-build|web-client-all|xmltv|tmdb-test|tmdb-validate|tmdb-build|tmdb-all|tmdb-consumer-test|logo-info|logo-test|logo-validate|logo-build|logo-install|logo-all|android-info|android-test|android-validate|android-build|android-bundle|android-bundle-install|android-all|android-mcp|sagemc-test|sagemc-validate|sagemc-build|sagemc-all|runtime-stage|runtime-images|runtime-image-status|runtime-test|runtime-update-package|runtime-update-test|release|runtime-all|clean)
     container_ensure
     # Run the bind-mounted controller so orchestration changes do not require
     # rebuilding the dependency image.

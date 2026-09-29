@@ -7,6 +7,7 @@ core=/work/sagetv
 fm=/project
 ffmpeg_plugin=/workspace/ffmpeg-plugin
 core_mcp=/workspace/core-mcp-plugin
+web_client=/workspace/web-client-plugin
 xmltv=/workspace/xmltv-import
 tmdb=/workspace/tmdb
 container=/workspace/container
@@ -42,6 +43,9 @@ validate_environment() {
   done
   test -x /opt/opensagetv-vibe/android-python/bin/python3
   test -x /opt/opensagetv-vibe/logo-python/bin/python3
+  test -x /opt/opensagetv-vibe/web-python/bin/python3
+  test -x /usr/local/bin/vibe-chromium
+  test -f /usr/share/java/servlet-api.jar
   test -f "$logo/scripts/logo_pipeline.py"
   /opt/opensagetv-vibe/logo-python/bin/python3 -c 'import cairosvg, PIL'
   test -f "$android/dev.sh"
@@ -356,7 +360,7 @@ run_runtime_all() {
 
 configure_safe_directories() {
   local path
-  for path in "$core" "$fm" "$ffmpeg_plugin" "$core_mcp" "$xmltv" "$tmdb" "$container" "$logo" "$android" "$sagemc" "$manifest"; do
+  for path in "$core" "$fm" "$ffmpeg_plugin" "$core_mcp" "$web_client" "$xmltv" "$tmdb" "$container" "$logo" "$android" "$sagemc" "$manifest"; do
     [[ -d "$path/.git" ]] || continue
     if ! git config --global --get-all safe.directory 2>/dev/null | grep -Fqx "$path"; then
       git config --global --add safe.directory "$path"
@@ -394,6 +398,29 @@ case "$cmd" in
     bash scripts/test.sh
     bash scripts/validate.sh
     env MIM_REPO_ROOT="$fm" bash scripts/package-dev.sh
+    ;;
+  web-client-build)
+    cd "$web_client"
+    bash scripts/build-local.sh
+    exec python3 scripts/package-local-plugin.py
+    ;;
+  web-client-test)
+    cd "$web_client"
+    bash scripts/build-local.sh
+    python3 scripts/package-local-plugin.py
+    exec env PATH="/opt/opensagetv-vibe/web-python/bin:$PATH" CHROMIUM_PATH=/usr/local/bin/vibe-chromium TEST_FFMPEG=/usr/bin/ffmpeg RUN_BROWSER_TESTS=0 bash scripts/validate.sh
+    ;;
+  web-client-validate)
+    cd "$web_client"
+    bash scripts/build-local.sh
+    python3 scripts/package-local-plugin.py
+    exec env PATH="/opt/opensagetv-vibe/web-python/bin:$PATH" CHROMIUM_PATH=/usr/local/bin/vibe-chromium TEST_FFMPEG=/usr/bin/ffmpeg RUN_BROWSER_TESTS=0 bash scripts/validate.sh
+    ;;
+  web-client-all)
+    cd "$web_client"
+    bash scripts/build-local.sh
+    python3 scripts/package-local-plugin.py
+    exec env PATH="/opt/opensagetv-vibe/web-python/bin:$PATH" CHROMIUM_PATH=/usr/local/bin/vibe-chromium TEST_FFMPEG=/usr/bin/ffmpeg RUN_BROWSER_TESTS=1 bash scripts/validate.sh
     ;;
   core-mcp-test)
     cd "$core_mcp"
@@ -473,7 +500,7 @@ case "$cmd" in
   clean)
     cd "$core"; bash tests/linux-modern/clean.sh
     android_clean
-    rm -rf "$fm/output" "$ffmpeg_plugin/build" "$ffmpeg_plugin/output" "$core_mcp/build" "$core_mcp/dist" "$core_mcp/output" "$manifest/output" "$xmltv/build" "$xmltv/output" "$tmdb/output" "$container/artifacts" "$logo/generated" "$sagemc/output"
+    rm -rf "$fm/output" "$ffmpeg_plugin/build" "$ffmpeg_plugin/output" "$core_mcp/build" "$core_mcp/dist" "$core_mcp/output" "$web_client/build" "$web_client/dist/SageTVWebPlayer.war" "$web_client/dist/local-install/SageTVPluginsDev.d"/*.zip "$manifest/output" "$xmltv/build" "$xmltv/output" "$tmdb/output" "$container/artifacts" "$logo/generated" "$sagemc/output"
     echo 'Build outputs cleaned; reusable container, cache, and release images retained'
     ;;
   all)
@@ -488,6 +515,7 @@ case "$cmd" in
     run_stage 'MIM SageTV plugin runtime packages' package_mim_plugin_runtime
     run_stage 'Stock-server FFmpeg Standard plugin and STVi' bash -c "cd '$ffmpeg_plugin' && bash scripts/test.sh && bash scripts/validate.sh && MIM_REPO_ROOT='$fm' bash scripts/package-dev.sh"
     run_stage 'Stock-server Core MCP Standard plugin' bash -c "cd '$core_mcp' && SAGETV_JAR='$ffmpeg_plugin/.deps/stock/Sage.jar' python3 scripts/project.py all"
+    run_stage 'Stock-server Web Client plugin' bash -c "cd '$web_client' && bash scripts/build-local.sh && python3 scripts/package-local-plugin.py && PATH='/opt/opensagetv-vibe/web-python/bin:$PATH' CHROMIUM_PATH=/usr/local/bin/vibe-chromium TEST_FFMPEG=/usr/bin/ffmpeg RUN_BROWSER_TESTS=1 bash scripts/validate.sh"
     run_stage 'XMLTV compile, regression tests, and package' bash -c "cd '$xmltv' && bash scripts/build.sh"
     run_stage 'Reusable TMDB service compile, cache/HTTP tests, and package' bash -c "cd '$tmdb' && bash scripts/build.sh"
     run_stage 'SageMC Studio graph tests, validation, and package' bash -c "cd '$sagemc' && SAGETV_CORE_ROOT='$core' bash scripts/test.sh && SAGETV_CORE_ROOT='$core' bash scripts/build.sh"
@@ -506,6 +534,6 @@ case "$cmd" in
     ;;
   shell) exec bash "$@" ;;
   help|*)
-    echo 'Commands: all core core-mcp-test core-mcp-validate core-mcp-build core-mcp-all ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim ffmpeg-runtime-package ffmpeg-plugin-test ffmpeg-plugin-validate ffmpeg-plugin-build ffmpeg-plugin-all xmltv tmdb-test tmdb-validate tmdb-build tmdb-all tmdb-consumer-test logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
+    echo 'Commands: all core core-mcp-test core-mcp-validate core-mcp-build core-mcp-all ffmpeg-linux ffmpeg-windows ffmpeg-info test-mim ffmpeg-runtime-package ffmpeg-plugin-test ffmpeg-plugin-validate ffmpeg-plugin-build ffmpeg-plugin-all web-client-test web-client-validate web-client-build web-client-all xmltv tmdb-test tmdb-validate tmdb-build tmdb-all tmdb-consumer-test logo-info logo-test logo-validate logo-build logo-install logo-all android-info android-test android-validate android-build android-bundle android-bundle-install android-all android-mcp sagemc-test sagemc-validate sagemc-build sagemc-all runtime-stage runtime-images runtime-image-status runtime-test runtime-update-package runtime-update-test release runtime-all clean shell'
     ;;
 esac

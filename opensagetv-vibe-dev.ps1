@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('image','start','stop','remove-dev','all','core','core-mcp-test','core-mcp-validate','core-mcp-build','core-mcp-all','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','ffmpeg-runtime-package','ffmpeg-plugin-test','ffmpeg-plugin-validate','ffmpeg-plugin-build','ffmpeg-plugin-all','xmltv','tmdb-test','tmdb-validate','tmdb-build','tmdb-all','tmdb-consumer-test','logo-info','logo-test','logo-validate','logo-build','logo-install','logo-all','android-info','android-test','android-validate','android-build','android-bundle','android-bundle-install','android-all','android-mcp','sagemc-test','sagemc-validate','sagemc-build','sagemc-all','runtime-stage','runtime-images','runtime-image-status','runtime-test','runtime-update-package','runtime-update-test','release','runtime-all','clean','shell')]
+  [ValidateSet('image','start','stop','remove-dev','all','core','core-mcp-test','core-mcp-validate','core-mcp-build','core-mcp-all','ffmpeg-linux','ffmpeg-windows','ffmpeg-info','test-mim','ffmpeg-runtime-package','ffmpeg-plugin-test','ffmpeg-plugin-validate','ffmpeg-plugin-build','ffmpeg-plugin-all','web-client-test','web-client-validate','web-client-build','web-client-all','xmltv','tmdb-test','tmdb-validate','tmdb-build','tmdb-all','tmdb-consumer-test','logo-info','logo-test','logo-validate','logo-build','logo-install','logo-all','android-info','android-test','android-validate','android-build','android-bundle','android-bundle-install','android-all','android-mcp','sagemc-test','sagemc-validate','sagemc-build','sagemc-all','runtime-stage','runtime-images','runtime-image-status','runtime-test','runtime-update-package','runtime-update-test','release','runtime-all','clean','shell')]
   [string]$Command='all',
   [Parameter(ValueFromRemainingArguments=$true)][string[]]$CommandArgs
 )
@@ -111,6 +111,7 @@ function Ensure-DevContainer {
       -v "$projects\opensagetv-vibe-ffmpeg-mim:/project" `
       -v "$projects\opensagetv-vibe-SageTVFFmpegPlugin:/workspace/ffmpeg-plugin" `
       -v "$projects\opensagetv-vibe-core-MCP-Plugin:/workspace/core-mcp-plugin" `
+      -v "$projects\opensagetv-vibe-web-client-plugin:/workspace/web-client-plugin" `
       -v "$projects\opensagetv-vibe-xmltv-import:/workspace/xmltv-import" `
       -v "$projects\opensagetv-vibe-tmdb:/workspace/tmdb" `
       -v "$projects\opensagetv-vibe-container:/workspace/container" `
@@ -127,6 +128,16 @@ function Ensure-DevContainer {
   if ($running -ne 'true') {
     & docker start $container | Out-Null
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  }
+
+  # Labels alone cannot detect a container created through an incompatible
+  # Windows/WSL path conversion: Docker may retain the expected labels while
+  # parsing each bind as a malformed source/destination pair. Refuse to run
+  # any build unless the two controller mounts are actually readable.
+  & docker exec $container sh -lc `
+    'test -f /workspace/android-client/AGENTS.md && test -f /workspace/web-client-plugin/AGENTS.md && test -f /workspace/release-manifest/opensagetv-vibe-dev.ps1'
+  if ($LASTEXITCODE -ne 0) {
+    throw "$container has invalid workspace mounts. Remove it with opensagetv-vibe-dev.ps1 remove-dev and recreate it with the native Windows launcher."
   }
 }
 

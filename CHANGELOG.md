@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added the `opensagetv-vibe-web-client-plugin` mount and component commands to
+  the reusable container and full build graph.
+- Added the Servlet 3.1 API plus a pinned Playwright 1.63.0/Chromium environment
+  as a late image layer for deterministic Web Client compilation and offline
+  browser validation without invalidating the larger Android/FFmpeg layers.
+
+## Unreleased
+
 - Added `opensagetv-vibe-core-MCP-Plugin` as the twelfth unified component and
   made it a required input to every Vibe runtime image. Checkout reconstruction,
   reusable-container commands, workspace handoff, release staging, source and

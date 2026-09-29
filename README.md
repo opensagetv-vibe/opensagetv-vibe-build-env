@@ -57,6 +57,7 @@ opensagetv-vibe-tmdb/
 opensagetv-vibe-logo/
 opensagetv-vibe-android-client/
 opensagetv-vibe-sagemc/
+opensagetv-vibe-web-client-plugin/
 opensagetv-vibe-archive/
 ```
 
@@ -163,6 +164,7 @@ Any failed stage writes `BUILD FAILED`, records the failed stage in
 | `ffmpeg-info` | Validate both toolchains, Docker access, and container source mount |
 | `test-mim` | Run all non-Android MIM lifecycle and real-media tests |
 | `ffmpeg-plugin-test`, `ffmpeg-plugin-validate`, `ffmpeg-plugin-build`, `ffmpeg-plugin-all` | Test, validate, package, or run all gates for the stock-server FFmpeg plugin |
+| `web-client-test`, `web-client-validate`, `web-client-build`, `web-client-all` | Test, validate, package, or run all generated/offline-browser gates for the stock-server Web Client plugin |
 | `core-mcp-test`, `core-mcp-validate`, `core-mcp-build`, `core-mcp-all` | Test, validate, package, or run all gates for the stock-server Core MCP plugin |
 | `xmltv` | Build and test only the XMLTV importer JAR |
 | `tmdb-test`, `tmdb-validate`, `tmdb-build`, `tmdb-all` | Test, validate, package, or run all gates for the reusable TMDB service |

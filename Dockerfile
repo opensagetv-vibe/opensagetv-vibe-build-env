@@ -3,9 +3,9 @@
 # The FFmpeg cross-toolchains are internal stages of this unified development
 # image. They are deliberately not published or tagged as a separate SageTV
 # builder image.
-ARG BTBN_BASE_IMAGE=ghcr.io/btbn/ffmpeg-builds/base@sha256:1add1617fb7b9e661b34632b9bdc468e80c8b8ea517a6fa51d1a90634ea69112
-ARG BTBN_LINUX_IMAGE=ghcr.io/btbn/ffmpeg-builds/linux64-gpl-9.0@sha256:69ce235cb2437154c54db6bee4b6b8c38290a19b6daca90b5ae769896f018761
-ARG BTBN_WIN64_IMAGE=ghcr.io/btbn/ffmpeg-builds/win64-gpl-9.0@sha256:2171aae9e82c7543a05d9f5f7674ebab3815168e2afa430c0dc7d3a5f877299a
+ARG BTBN_BASE_IMAGE=ghcr.io/btbn/ffmpeg-builds/base@sha256:4536b0bd39a109b7c0f142feef8977c47de7e392e6c23f779ca6cbfa3da4657f
+ARG BTBN_LINUX_IMAGE=ghcr.io/btbn/ffmpeg-builds/linux64-gpl-9.0@sha256:a201ab0b8bfafbbd9b3f4ae48bb9b9425c4d178b6b7c597dfacf8f2b650b828d
+ARG BTBN_WIN64_IMAGE=ghcr.io/btbn/ffmpeg-builds/win64-gpl-9.0@sha256:c250216dca56993e08df3eb2bd577d7b641abe8b09cabbf459bc0678ee5d2495
 ARG ANDROID_JDK8_IMAGE=eclipse-temurin:8-jdk-jammy@sha256:7cb1137d4a02aeb7ca85faae69c5f0720703936cbfb0b4af21067c73174f9b5e
 ARG ANDROID_JDK17_IMAGE=eclipse-temurin:17-jdk-jammy@sha256:400014962ad7224461f945bb1cc3d7d5a1927ce15b8245b72d9cedcda554cd2a
 
@@ -72,6 +72,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OPENSAGETV_VIBE_ANDROID_LEGACY_JAVA_HOME=/opt/java/jdk8 \
     OPENSAGETV_VIBE_ANDROID_PYTHON=/opt/opensagetv-vibe/android-python/bin/python3 \
     OPENSAGETV_VIBE_LOGO_PYTHON=/opt/opensagetv-vibe/logo-python/bin/python3 \
+    OPENSAGETV_VIBE_WEB_PYTHON=/opt/opensagetv-vibe/web-python/bin/python3 \
     OPENSAGETV_VIBE_BUILD_ENV_VERSION=u26-j11-release-v8
 ARG ANDROID_SDK_TOOLS_URL=https://dl.google.com/android/repository/commandlinetools-linux-15859902_latest.zip
 ARG ANDROID_SDK_TOOLS_SHA256=4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583
@@ -168,12 +169,35 @@ RUN mkdir -p /usr/local/libexec/docker/cli-plugins \
  && chmod 0755 /usr/local/libexec/docker/cli-plugins/docker-buildx \
  && docker buildx version
 
+# The Web Client compiles against Servlet 3.1 and its offline DOM/layout gates
+# use pinned Python Playwright plus its own Chromium. Keep this late so adding
+# the web project reuses the large Android SDK and FFmpeg toolchain layers.
+COPY web-requirements.lock /opt/opensagetv-vibe/web-requirements.lock
+RUN apt-get -o Acquire::Retries=5 update \
+ && apt-get -o Acquire::Retries=5 install -y --no-install-recommends libservlet-api-java \
+ && python3 -m venv /opt/opensagetv-vibe/web-python \
+ && /opt/opensagetv-vibe/web-python/bin/python3 -m pip install --no-cache-dir --upgrade \
+      'pip==26.2.1' 'setuptools==84.0.0' 'wheel==0.48.0' \
+ && /opt/opensagetv-vibe/web-python/bin/python3 -m pip install --no-cache-dir \
+      -r /opt/opensagetv-vibe/web-requirements.lock \
+ && /opt/opensagetv-vibe/web-python/bin/playwright install-deps chromium \
+ && mkdir -p /opt/opensagetv-vibe/chromium \
+ && curl -fkSL \
+      "https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-linux64.zip" \
+      -o /tmp/chrome-linux64.zip \
+ && echo "8aac35011c18f6e2d10696154af89a5728ac2ddd6dc6fad24ffdf243c3fcfd5a  /tmp/chrome-linux64.zip" | sha256sum -c - \
+ && unzip -q /tmp/chrome-linux64.zip -d /opt/opensagetv-vibe/chromium \
+ && ln -s /opt/opensagetv-vibe/chromium/chrome-linux64/chrome /usr/local/bin/vibe-chromium \
+ && test -x /usr/local/bin/vibe-chromium \
+ && rm -f /tmp/chrome-linux64.zip \
+ && rm -rf /var/lib/apt/lists/*
+
 ENV CCACHE_DIR=/work/.ccache \
     CCACHE_MAXSIZE=20G \
     PATH=/opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/36.0.0:/opt/android-sdk/cmdline-tools/latest/bin:${PATH}
 # Keep authoritative release metadata after expensive dependency layers so a
 # metadata-only release bump reuses the Android SDK and Python caches.
-ARG BUILD_ENV_VERSION=u26-j11-release-v8
+ARG BUILD_ENV_VERSION=u26-j11-release-v9
 ENV OPENSAGETV_VIBE_BUILD_ENV_VERSION=${BUILD_ENV_VERSION}
 LABEL org.opencontainers.image.version=${BUILD_ENV_VERSION}
 COPY scripts/dev-entrypoint.sh /usr/local/bin/opensagetv-vibe-dev

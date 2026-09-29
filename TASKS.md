@@ -3,6 +3,9 @@
 This is the only active backlog for this repository. Completed work is removed
 and recorded in `CHANGELOG.md` and `HANDOFF.md`.
 
+- [ ] Complete the first `web-client-all` gate with the new late-layer Servlet
+  and Playwright/Chromium dependencies, then record its exact image identity.
+
 - [ ] Rerun the complete whole-project `all` release pipeline on the final
   published component revisions.
 - [ ] Make standalone `release` reject component outputs whose embedded source

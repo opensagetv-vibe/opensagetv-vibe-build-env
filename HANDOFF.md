@@ -1,5 +1,13 @@
 # OpenSageTV Vibe build-environment handoff
 
+## Web Client plugin integration — 2026-09-27
+
+The unified environment now mounts `opensagetv-vibe-web-client-plugin`, exposes
+`web-client-test|validate|build|all`, and includes it in the complete pipeline.
+The image owns Servlet 3.1 plus pinned Playwright/Chromium browser-test tooling.
+This changes the build environment only; public Web Client publication remains
+blocked on its physical `.232` gates and explicit user approval.
+
 ## Standard takeover
 
 Read `AGENTS.md`, `README.md`, `TASKS.md`, and `WORKFLOW.md`, then run
