@@ -1,0 +1,59 @@
+[workspace]
+owner = "opensagetv-vibe"
+default_branch = "main"
+author_name = "jzhvymetal"
+author_email = "jzhvymetal@users.noreply.github.com"
+
+[[projects]]
+name = "opensagetv-vibe-build-env"
+workflow = "Build environment repository checks"
+pilot = true
+
+[[projects]]
+name = "opensagetv-vibe-core"
+workflow = "Core repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-container"
+workflow = "Repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-logo"
+workflow = "Repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-ffmpeg-mim"
+workflow = "Repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-core-MCP-Plugin"
+workflow = "Repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-SageTVFFmpegPlugin"
+workflow = "Repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-tmdb"
+workflow = "Repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-xmltv-import"
+workflow = "Repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-sagemc"
+workflow = "Repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-web-client-plugin"
+workflow = "Repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-android-client"
+workflow = "Repository checks"
+
+[[projects]]
+name = "opensagetv-vibe-archive"
+publish = false
+reason = "Local-only until archive publication and Git LFS policy are approved"

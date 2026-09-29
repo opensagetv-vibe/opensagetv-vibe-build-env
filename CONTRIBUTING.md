@@ -13,3 +13,10 @@ not create version-specific status files.
 Docker images produced by the workflow are local/test artifacts. Publish only
 the source repository and checksummed commissioning/export files; do not push
 images to a registry unless a future reviewed policy explicitly changes this.
+
+Before any GitHub push, PR, tag, or release, run the applicable
+`github_change_gate.cmd` / `github_change_gate.sh` command documented in
+`WORKFLOW.md`. Multi-repository changes must use one pilot, wait for its
+required workflow to pass, and then update and verify repositories one at a
+time. A failed identity, target, workflow, PR check, tag, or asset gate stops
+the batch.

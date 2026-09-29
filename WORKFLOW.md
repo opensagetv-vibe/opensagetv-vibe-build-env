@@ -47,3 +47,29 @@ When a task is completed, remove it from that repository's `TASKS.md`, record
 the verified result in `CHANGELOG.md` and current takeover state in
 `HANDOFF.md`, and mirror the active workspace dependency in root `task.md`.
 Do not create version-specific Markdown or text status files.
+
+## GitHub pull, push, and release gate
+
+Every Vibe repository update is governed by `config/github-projects.toml` and
+the fail-closed shared gate:
+
+```text
+github_change_gate.cmd audit
+./github_change_gate.sh audit
+```
+
+The audit checks repository identity, default branch, clean state, origin
+ancestry, outgoing author/committer identity, diff integrity, and the required
+repository workflow before any push. For a multi-repository update, push only
+the configured pilot (`opensagetv-vibe-build-env`), then require:
+
+```text
+github_change_gate.cmd verify-head --project opensagetv-vibe-build-env
+```
+
+Only after that passes may the next repository be pushed. Run `verify-head`
+after each push and stop on the first failure. Use `verify-pr` with every
+required target check before opening another PR, and `verify-release` after
+publication to ensure the release tag identifies current `HEAD` and all public
+assets have GitHub digests. Never publish all repositories concurrently before
+the pilot succeeds.

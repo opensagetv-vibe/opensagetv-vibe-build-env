@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added the workspace-wide GitHub change gate and authoritative project
+  manifest for all Vibe repositories. It validates pre-push identity and Git
+  state, enforces pilot-first sequential repository updates, verifies required
+  PR and exact-head workflow checks, and validates release tag/asset-digest
+  boundaries. The unpublished archive remains explicitly excluded until its
+  Git LFS/publication policy is approved.
+
 - Added the `opensagetv-vibe-web-client-plugin` mount and component commands to
   the reusable container and full build graph.
 - Added the Servlet 3.1 API plus a pinned Playwright 1.63.0/Chromium environment
