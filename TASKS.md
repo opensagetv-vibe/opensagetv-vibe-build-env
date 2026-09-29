@@ -3,6 +3,13 @@
 This is the only active backlog for this repository. Completed work is removed
 and recorded in `CHANGELOG.md` and `HANDOFF.md`.
 
+- [ ] TOP PRIORITY: add a reproducible current-Ubuntu stock-Core build/runtime
+  lane beside the existing Vibe lane. It must build canonical SageTV with the
+  proposed GCC/64-bit, ImageLoader/native-library, launcher, and source-clean
+  patches; run the affected server/container gates; and preserve exact evidence
+  that can be attached to the separate `google/sagetv` pull requests. The Vibe
+  Ubuntu 26 lane must continue to pass from the same unified environment.
+
 - [ ] Complete the first `web-client-all` gate with the new late-layer Servlet
   and Playwright/Chromium dependencies, then record its exact image identity.
 

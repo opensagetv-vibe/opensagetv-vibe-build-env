@@ -1,5 +1,15 @@
 # OpenSageTV Vibe build-environment handoff
 
+## Top priority: stock and Vibe current-Ubuntu evidence
+
+Add a canonical stock-Core build/runtime lane beside the existing Vibe lane.
+The stock lane must isolate and prove `google/sagetv` #516, #519, #528, and the
+separable Ubuntu/ImageLoader changes in #529, then feed a later focused
+`OpenSageTV/sagetv-dockers` current-Ubuntu runtime PR. Preserve separate
+results for stock and Vibe payloads; a passing Vibe build is not evidence that
+canonical Core works, and upstream review must not remove the working Vibe
+path.
+
 ## Web Client plugin integration — 2026-09-27
 
 The unified environment now mounts `opensagetv-vibe-web-client-plugin`, exposes

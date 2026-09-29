@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Made the canonical-and-Vibe current-Ubuntu container path the first build
+  priority. Documented the stock-Core evidence lane for `google/sagetv` #516,
+  #519, #528, and separable #529 changes plus the later focused
+  `OpenSageTV/sagetv-dockers` runtime proposal.
+
 - Added the workspace-wide GitHub change gate and authoritative project
   manifest for all Vibe repositories. It validates pre-push identity and Git
   state, enforces pilot-first sequential repository updates, verifies required

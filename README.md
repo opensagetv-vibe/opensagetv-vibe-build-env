@@ -9,6 +9,13 @@ JDK 17/JDK 8 and Android SDK tooling for the Android MiniClient, plus the pinned
 CairoSVG/Pillow/Fontconfig logo toolchain; Java 11 remains the global/default
 SageTV server toolchain.
 
+The immediate priority is a second, reproducible stock-Core lane in this same
+Ubuntu 26 environment. It will supply before/after evidence for canonical
+`google/sagetv` PRs #516, #519, #528, and the separable Ubuntu/ImageLoader
+changes in #529, while the existing Vibe lane continues to pass unchanged.
+After those Core approvals, the stock lane becomes the evidence source for a
+separate current-Ubuntu runtime proposal to `OpenSageTV/sagetv-dockers`.
+
 The public development image is `opensagetv-vibe-build-env:u26-j11`; the only
 reusable development container is `opensagetv-vibe-dev`. Linux and Windows
 FFmpeg toolchains are private stages in this Dockerfile. Normal use never
