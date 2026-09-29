@@ -14,6 +14,10 @@ the repository. These instructions apply to humans and every AI assistant.
 - Generate update/handoff packages only with `create_ai_handoff_zip.cmd`.
 - Never claim device, tuner, GPU, Unraid, or network hardware validation from
   host-only tests.
+- Release validation is impact-based: rerun only gates the release changes
+  could affect. Do not repeat unrelated completed gates. Run the full gate
+  suite only when the user explicitly requests it or a broad dependency or
+  architecture change requires it, and document that reason and scope.
 
 
 ## Stock-server test-control policy
