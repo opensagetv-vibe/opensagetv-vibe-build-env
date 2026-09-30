@@ -1,7 +1,13 @@
 # OpenSageTV Vibe build-environment tasks
 
-This is the only active backlog for this repository. Completed work is removed
-and recorded in `CHANGELOG.md` and `HANDOFF.md`.
+> **Pre-commit task maintenance:** Immediately before every repository commit, move
+> completed `[x]` items out of active sections and into
+> `## Checklist change ledger`. Preserve IDs, evidence, and context; never
+> discard completion history. Active sections contain unchecked work only.
+
+This is the only active backlog for this repository. Completed work moves to
+the checklist change ledger; release evidence is also recorded in
+`CHANGELOG.md` and `HANDOFF.md`.
 
 - [ ] TOP PRIORITY: add a reproducible current-Ubuntu stock-Core build/runtime
   lane beside the existing Vibe lane. It must build canonical SageTV with the
@@ -23,3 +29,5 @@ and recorded in `CHANGELOG.md` and `HANDOFF.md`.
   bind mount does not require the current slow per-file fallback.
 - [ ] Remove or normalize unconfigured legacy x264/FFmpeg `distclean` calls so
   ignored legacy clean errors do not pollute clean-build logs.
+
+## Checklist change ledger

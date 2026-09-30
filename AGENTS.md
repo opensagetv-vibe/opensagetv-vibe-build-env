@@ -3,8 +3,9 @@
 Read `README.md`, `HANDOFF.md`, `TASKS.md`, and `WORKFLOW.md` before changing
 the repository. These instructions apply to humans and every AI assistant.
 
-- `TASKS.md` is the only local backlog. Remove completed entries immediately
-  and record evidence in `CHANGELOG.md` and current state in `HANDOFF.md`.
+- `TASKS.md` is the only local backlog. Move completed entries immediately to
+  its checklist change ledger and record release evidence in `CHANGELOG.md` and
+  current state in `HANDOFF.md`.
 - Do not create prompt, review, session, or per-version Markdown/text files.
 - Version history belongs only in `CHANGELOG.md`; machine metadata belongs in
   `release.properties`.
@@ -33,3 +34,13 @@ the repository. These instructions apply to humans and every AI assistant.
   expressed through the stock plugin/API boundary. Document the proven API
   gap, keep the extension optional and negotiated with a safe stock fallback,
   and verify older clients and installations remain unaffected.
+
+## Pre-commit task-list maintenance
+
+Immediately before every repository commit, clean `TASKS.md`: move every
+completed `[x]` item out of the active task sections and into
+`## Checklist change ledger`. Preserve stable IDs, acceptance evidence, order,
+and enough source/parent context to understand the result. Never delete
+completion history. Active task sections must contain unchecked work only;
+checked boxes may appear only inside the checklist change ledger. Regenerate
+the project manifest when the repository tracks one.
