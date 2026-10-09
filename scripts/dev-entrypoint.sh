@@ -7,6 +7,7 @@ core=/work/sagetv
 fm=/project
 ffmpeg_plugin=/workspace/ffmpeg-plugin
 core_mcp=/workspace/core-mcp-plugin
+client_extension=/workspace/client-extension-plugin
 web_client=/workspace/web-client-plugin
 xmltv=/workspace/xmltv-import
 tmdb=/workspace/tmdb
@@ -434,6 +435,30 @@ case "$cmd" in
   core-mcp-all)
     cd "$core_mcp"
     exec env SAGETV_JAR="$ffmpeg_plugin/.deps/stock/Sage.jar" python3 scripts/project.py all
+    ;;
+  client-extension-test)
+    cd "$client_extension"
+    exec env SAGETV_JAR="$ffmpeg_plugin/.deps/stock/Sage.jar" bash scripts/test.sh
+    ;;
+  client-extension-validate)
+    cd "$client_extension"
+    exec bash scripts/validate.sh
+    ;;
+  client-extension-build)
+    cd "$client_extension"
+    exec env SAGETV_JAR="$ffmpeg_plugin/.deps/stock/Sage.jar" bash scripts/build.sh
+    ;;
+  client-extension-package)
+    cd "$client_extension"
+    env SAGETV_JAR="$ffmpeg_plugin/.deps/stock/Sage.jar" bash scripts/build.sh
+    exec python3 scripts/package.py
+    ;;
+  client-extension-all)
+    cd "$client_extension"
+    env SAGETV_JAR="$ffmpeg_plugin/.deps/stock/Sage.jar" bash scripts/test.sh
+    bash scripts/validate.sh
+    python3 scripts/package.py
+    echo 'PASS: Vibe Client Extension affected build and source gates'
     ;;
   xmltv) cd "$xmltv"; exec bash scripts/build.sh ;;
   tmdb-test) cd "$tmdb"; exec bash scripts/build.sh ;;

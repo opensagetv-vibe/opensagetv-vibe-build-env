@@ -31,3 +31,8 @@ the checklist change ledger; release evidence is also recorded in
   ignored legacy clean errors do not pollute clean-build logs.
 
 ## Checklist change ledger
+
+- 2026-10-08 pre-commit review: synchronize the stock/plugin-first task-fix
+  policy and existing companion build dispatch. Root order reviewed at Android
+  revision305; unfinished build/runtime tasks remain unchecked. Script/sibling
+  workflow contracts pass; no image rebuild or hardware qualification claimed.
