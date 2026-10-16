@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Register Client Extension source publication with the shared sequential
+  GitHub checks. Plugin release acceptance remains its independent gate;
+  the local archive remains explicitly excluded from publication.
+
 - Made the canonical-and-Vibe current-Ubuntu container path the first build
   priority. Documented the stock-Core evidence lane for `google/sagetv` #516,
   #519, #528, and separable #529 changes plus the later focused

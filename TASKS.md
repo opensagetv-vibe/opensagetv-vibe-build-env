@@ -32,6 +32,12 @@ the checklist change ledger; release evidence is also recorded in
 
 ## Checklist change ledger
 
+- [x] 2026-10-16 release onboarding: register Client Extension source in the
+  shared GitHub gate with a contract preserving the unpublished archive.
+  Source publication does not qualify unfinished companion DVD release gates.
+  `dev.cmd test` passes shell/Python/workflow contracts and the independent
+  twelve-component workspace handoff/install self-test; no runtime/image change.
+
 - 2026-10-08 pre-commit review: synchronize the stock/plugin-first task-fix
   policy and existing companion build dispatch. Root order reviewed at Android
   revision305; unfinished build/runtime tasks remain unchecked. Script/sibling

@@ -1,5 +1,10 @@
 # OpenSageTV Vibe build-environment handoff
 
+Client Extension source publication is now included in the shared GitHub
+project gate. Its independent physical/plugin release gate still applies.
+The local archive remains excluded. This workflow-only change requires no
+image rebuild; verify the pilot's exact-HEAD CI before pushing the next repo.
+
 ## Top priority: stock and Vibe current-Ubuntu evidence
 
 Add a canonical stock-Core build/runtime lane beside the existing Vibe lane.

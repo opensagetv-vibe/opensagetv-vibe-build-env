@@ -54,6 +54,10 @@ name = "opensagetv-vibe-android-client"
 workflow = "Repository checks"
 
 [[projects]]
+name = "opensagetv-vibe-client-extension-Plugin"
+workflow = "Repository checks"
+
+[[projects]]
 name = "opensagetv-vibe-archive"
 publish = false
 reason = "Local-only until archive publication and Git LFS policy are approved"

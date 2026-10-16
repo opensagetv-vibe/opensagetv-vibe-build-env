@@ -89,3 +89,15 @@ grep -Fq -- '--core-mcp-version-file "$core_mcp/release.properties"' "$build_env
 grep -Fq '"core_mcp": "https://github.com/opensagetv-vibe/opensagetv-vibe-core-MCP-Plugin.git"' \
   "$build_env/scripts/generate-release-manifest.py"
 echo 'PASS: unified release stages and records the stock-server Core MCP plugin'
+
+python3 - "$build_env/config/github-projects.toml" <<'PY'
+import sys
+import tomllib
+with open(sys.argv[1], 'rb') as source:
+    projects = {row['name']: row for row in tomllib.load(source)['projects']}
+companion = projects['opensagetv-vibe-client-extension-Plugin']
+assert companion['workflow'] == 'Repository checks'
+assert companion.get('publish', True)
+assert projects['opensagetv-vibe-archive']['publish'] is False
+PY
+echo 'PASS: Client Extension source follows the shared GitHub gate; archive stays private'
