@@ -1,5 +1,17 @@
 # OpenSageTV Vibe build-environment handoff
 
+## XMLTV Standard-plugin rename (2026-10-18)
+
+Active checkout/GitHub identity is opensagetv-vibe-xmltv-Plugin, replacing
+opensagetv-vibe-xmltv-import. Internal /workspace/xmltv-import remains stable.
+Both launchers carry a reviewed XMLTV-mount identity label and recreate only
+the reusable dev container when the old renamed bind would otherwise be stale;
+persistent named caches/Android adbkey are retained. No image rebuild needed.
+Checkout/handoff/release registry/manifest references and component dispatch
+now use the new project name, including package. XMLTV compilation/validation
+uses stock Sage.jar rather than modified Core. Test only affected workflow/
+handoff/syntax and importer boundaries; no Android hardware matrix required.
+
 Client Extension source publication is now included in the shared GitHub
 project gate. Its independent physical/plugin release gate still applies.
 The local archive remains excluded. This workflow-only change requires no

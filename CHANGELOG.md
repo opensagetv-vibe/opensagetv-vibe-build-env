@@ -1,5 +1,13 @@
 # Changelog
 
+## XMLTV plugin integration - 2026-10-18
+
+- Follow the renamed opensagetv-vibe-xmltv-Plugin checkout in clones, mounts,
+  shared GitHub checks, release metadata and workspace handoffs.
+- Detect/recreate a stale XMLTV bind after rename while retaining named caches
+  and the Android authorization identity; no image change.
+- Expose XMLTV package dispatch and validate its stock-JAR dependency.
+
 ## Unreleased
 
 - Register Client Extension source publication with the shared sequential

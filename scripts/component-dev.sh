@@ -99,17 +99,19 @@ case "$project:$command" in
   opensagetv-vibe-web-client-plugin:install) artifact_only_install ;;
   opensagetv-vibe-web-client-plugin:all) exec "$unified" web-client-all "$@" ;;
 
-  opensagetv-vibe-xmltv-import:test)
+  opensagetv-vibe-xmltv-Plugin:test)
     syntax_check
     test -f "$project_root/SAGETV_SERVER_ROOT_Contents/xmltv_src/XMLTVImportPlugin.java"
     echo 'PASS: XMLTV source layout'
     ;;
-  opensagetv-vibe-xmltv-import:validate)
-    test -f "$(dirname "$project_root")/opensagetv-vibe-core/output/server/Sage.jar"
-    echo 'PASS: XMLTV Core dependency is staged'
+  opensagetv-vibe-xmltv-Plugin:validate)
+    python3 "$project_root/scripts/package.py" validate
+    test -f "$(dirname "$project_root")/opensagetv-vibe-SageTVFFmpegPlugin/.deps/stock/Sage.jar"
+    echo 'PASS: XMLTV stock Sage.jar compile dependency is staged'
     ;;
-  opensagetv-vibe-xmltv-import:build) exec "$unified" xmltv "$@" ;;
-  opensagetv-vibe-xmltv-import:install) artifact_only_install ;;
+  opensagetv-vibe-xmltv-Plugin:build) exec "$unified" xmltv "$@" ;;
+  opensagetv-vibe-xmltv-Plugin:package) exec "$unified" xmltv "$@" ;;
+  opensagetv-vibe-xmltv-Plugin:install) artifact_only_install ;;
 
   opensagetv-vibe-tmdb:test) exec "$unified" tmdb-test "$@" ;;
   opensagetv-vibe-tmdb:validate) exec "$unified" tmdb-validate "$@" ;;

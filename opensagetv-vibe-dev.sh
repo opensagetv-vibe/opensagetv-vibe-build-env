@@ -126,10 +126,18 @@ container_ensure() {
       fi
     fi
   fi
+  # A repository rename keeps the same sibling root but invalidates this bind.
+  # Recreate only the reusable dev container; named caches/ADB identity persist.
+  if docker container inspect "$container" >/dev/null 2>&1 && \
+      [[ "$(docker inspect "$container" --format '{{index .Config.Labels "org.opensagetv.vibe.xmltv-project-name"}}')" != opensagetv-vibe-xmltv-Plugin ]]; then
+    echo "Recreating $container because the XMLTV project mount changed."
+    container_remove
+  fi
   if ! docker container inspect "$container" >/dev/null 2>&1; then
     docker create --name "$container" --init \
       --label org.opensagetv.vibe.role=unified-dev \
       --label "org.opensagetv.vibe.projects-root=$projects_id" \
+      --label org.opensagetv.vibe.xmltv-project-name=opensagetv-vibe-xmltv-Plugin \
       --label "org.opensagetv.vibe.android-project-root=$android_project_id" \
       --label "org.opensagetv.vibe.sagemc-project-root=$sagemc_project_id" \
       --label "org.opensagetv.vibe.tmdb-project-root=$tmdb_project_id" \
@@ -145,7 +153,7 @@ container_ensure() {
       -v "$core_mcp_project:/workspace/core-mcp-plugin" \
       -v "$client_extension_project:/workspace/client-extension-plugin" \
       -v "$web_client_project:/workspace/web-client-plugin" \
-      -v "$projects/opensagetv-vibe-xmltv-import:/workspace/xmltv-import" \
+      -v "$projects/opensagetv-vibe-xmltv-Plugin:/workspace/xmltv-import" \
       -v "$tmdb_project:/workspace/tmdb" \
       -v "$projects/opensagetv-vibe-container:/workspace/container" \
       -v "$projects/opensagetv-vibe-logo:/workspace/logo" \

@@ -32,6 +32,14 @@ the checklist change ledger; release evidence is also recorded in
 
 ## Checklist change ledger
 
+- [x] **XMLTV-PLUGIN-002 dependency (2026-10-18).** Rename active XMLTV
+  checkout/registry/handoff/source URLs to opensagetv-vibe-xmltv-Plugin;
+  preserve internal mount path and guard its source identity in both wrappers.
+  New package dispatch and stock-JAR compile validation; no runtime image
+  rebuild or ADB identity reset. Common contracts and independent twelve-
+  repository handoff/install self-test pass. XMLTV's own task ledger owns
+  lifecycle/packaging/server qualification; no catalog publication implied.
+
 - [x] 2026-10-16 release onboarding: register Client Extension source in the
   shared GitHub gate with a contract preserving the unpublished archive.
   Source publication does not qualify unfinished companion DVD release gates.

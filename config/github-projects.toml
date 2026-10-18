@@ -38,7 +38,7 @@ name = "opensagetv-vibe-tmdb"
 workflow = "Repository checks"
 
 [[projects]]
-name = "opensagetv-vibe-xmltv-import"
+name = "opensagetv-vibe-xmltv-Plugin"
 workflow = "Repository checks"
 
 [[projects]]

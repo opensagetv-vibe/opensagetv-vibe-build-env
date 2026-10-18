@@ -100,10 +100,18 @@ function Ensure-DevContainer {
     }
   }
 
+  if (Test-DockerObject @('container','inspect',$container)) {
+    $xmltvName = (& docker inspect $container --format '{{index .Config.Labels "org.opensagetv.vibe.xmltv-project-name"}}').Trim()
+    if ($xmltvName -ne 'opensagetv-vibe-xmltv-Plugin') {
+      Write-Output "Recreating $container because the XMLTV project mount changed."
+      Remove-DevContainer
+    }
+  }
   if (-not (Test-DockerObject @('container','inspect',$container))) {
     & docker create --name $container --init `
       --label 'org.opensagetv.vibe.role=unified-dev' `
       --label "org.opensagetv.vibe.projects-root=$projectsId" `
+      --label 'org.opensagetv.vibe.xmltv-project-name=opensagetv-vibe-xmltv-Plugin' `
       --entrypoint sleep `
       -v 'opensagetv-vibe-gradle-cache:/work/.gradle' `
       -v 'opensagetv-vibe-ccache:/work/.ccache' `
@@ -112,7 +120,7 @@ function Ensure-DevContainer {
       -v "$projects\opensagetv-vibe-SageTVFFmpegPlugin:/workspace/ffmpeg-plugin" `
       -v "$projects\opensagetv-vibe-core-MCP-Plugin:/workspace/core-mcp-plugin" `
       -v "$projects\opensagetv-vibe-web-client-plugin:/workspace/web-client-plugin" `
-      -v "$projects\opensagetv-vibe-xmltv-import:/workspace/xmltv-import" `
+      -v "$projects\opensagetv-vibe-xmltv-Plugin:/workspace/xmltv-import" `
       -v "$projects\opensagetv-vibe-tmdb:/workspace/tmdb" `
       -v "$projects\opensagetv-vibe-container:/workspace/container" `
       -v "$projects\opensagetv-vibe-logo:/workspace/logo" `

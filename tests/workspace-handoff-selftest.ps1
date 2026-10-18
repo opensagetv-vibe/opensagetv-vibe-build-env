@@ -6,7 +6,7 @@ $projects=Join-Path $temp 'projects'
 $bundle=Join-Path $temp 'bundle'
 $repos=@(
   'opensagetv-vibe-build-env','opensagetv-vibe-core','opensagetv-vibe-container',
-  'opensagetv-vibe-ffmpeg-mim','opensagetv-vibe-xmltv-import',
+  'opensagetv-vibe-ffmpeg-mim','opensagetv-vibe-xmltv-Plugin',
   'opensagetv-vibe-SageTVFFmpegPlugin',
   'opensagetv-vibe-core-MCP-Plugin',
   'opensagetv-vibe-tmdb',

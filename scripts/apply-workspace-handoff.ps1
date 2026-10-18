@@ -20,7 +20,7 @@ $order=@(
   'opensagetv-vibe-ffmpeg-mim',
   'opensagetv-vibe-SageTVFFmpegPlugin',
   'opensagetv-vibe-core-MCP-Plugin',
-  'opensagetv-vibe-xmltv-import',
+  'opensagetv-vibe-xmltv-Plugin',
   'opensagetv-vibe-tmdb',
   'opensagetv-vibe-logo',
   'opensagetv-vibe-android-client',

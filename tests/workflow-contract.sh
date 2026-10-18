@@ -10,7 +10,7 @@ repos=(
   opensagetv-vibe-ffmpeg-mim
   opensagetv-vibe-SageTVFFmpegPlugin
   opensagetv-vibe-core-MCP-Plugin
-  opensagetv-vibe-xmltv-import
+  opensagetv-vibe-xmltv-Plugin
   opensagetv-vibe-tmdb
   opensagetv-vibe-logo
   opensagetv-vibe-android-client
@@ -101,3 +101,13 @@ assert companion.get('publish', True)
 assert projects['opensagetv-vibe-archive']['publish'] is False
 PY
 echo 'PASS: Client Extension source follows the shared GitHub gate; archive stays private'
+
+for controller in opensagetv-vibe-dev.sh opensagetv-vibe-dev.ps1; do
+  grep -Fq 'org.opensagetv.vibe.xmltv-project-name' "$build_env/$controller"
+  grep -Fq 'opensagetv-vibe-xmltv-Plugin:/workspace/xmltv-import' "$build_env/$controller"
+done
+grep -Fq 'opensagetv-vibe-xmltv-Plugin:package)' "$build_env/scripts/component-dev.sh"
+grep -Fq '.deps/stock/Sage.jar' "$build_env/scripts/component-dev.sh"
+grep -Fq "'opensagetv-vibe-xmltv-Plugin' = 'main'" "$build_env/checkout-all.ps1"
+grep -Fq '"$repository" == opensagetv-vibe-xmltv-Plugin ]]; then branch=main' "$build_env/checkout-all.sh"
+echo 'PASS: XMLTV rename refreshes stale mounts and uses stock Core for packaging'

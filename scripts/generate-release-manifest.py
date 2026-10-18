@@ -18,7 +18,7 @@ SOURCES = {
     "ffmpeg_mim": "https://github.com/opensagetv-vibe/opensagetv-vibe-ffmpeg-mim.git",
     "ffmpeg_plugin": "https://github.com/opensagetv-vibe/opensagetv-vibe-SageTVFFmpegPlugin.git",
     "core_mcp": "https://github.com/opensagetv-vibe/opensagetv-vibe-core-MCP-Plugin.git",
-    "xmltv_import": "https://github.com/opensagetv-vibe/opensagetv-vibe-xmltv-import.git",
+    "xmltv_import": "https://github.com/opensagetv-vibe/opensagetv-vibe-xmltv-Plugin.git",
     "tmdb": "https://github.com/opensagetv-vibe/opensagetv-vibe-tmdb.git",
     "logo": "https://github.com/opensagetv-vibe/opensagetv-vibe-logo.git",
     "android_client": "https://github.com/opensagetv-vibe/opensagetv-vibe-android-client.git",
