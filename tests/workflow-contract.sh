@@ -14,7 +14,7 @@ repos=(
   opensagetv-vibe-tmdb-Plugin
   opensagetv-vibe-logo
   opensagetv-vibe-android-client
-  opensagetv-vibe-sagemc
+  opensagetv-vibe-sagemc-Plugin
   opensagetv-vibe-archive
 )
 required=(
@@ -122,3 +122,11 @@ for controller in opensagetv-vibe-dev.sh opensagetv-vibe-dev.ps1; do
 done
 grep -Fq -- "-cne 'opensagetv-vibe-Xmltv-Plugin'" "$build_env/opensagetv-vibe-dev.ps1"
 echo 'PASS: canonical plugin source names preserve runtime manifest identities'
+
+for controller in opensagetv-vibe-dev.sh opensagetv-vibe-dev.ps1; do
+  grep -Fq 'opensagetv-vibe-sagemc-Plugin' "$build_env/$controller"
+  grep -Fq 'canonical-plugin-names-v3-sagemc' "$build_env/$controller"
+done
+grep -Fq 'opensagetv-vibe-sagemc-Plugin:install)' "$build_env/scripts/component-dev.sh"
+grep -Fq 'scripts/install_development.py' "$build_env/scripts/component-dev.sh"
+echo 'PASS: SageMC plugin rename refreshes native mounts and uses bounded dev installation'

@@ -111,7 +111,7 @@ function Ensure-DevContainer {
   # A single layout identity covers all four renamed source roots, not plugin IDs.
   if (Test-DockerObject @('container','inspect',$container)) {
     $layout = (& docker inspect $container --format '{{index .Config.Labels "org.opensagetv.vibe.plugin-layout"}}').Trim()
-    if ($layout -cne 'canonical-plugin-names-v2') {
+    if ($layout -cne 'canonical-plugin-names-v3-sagemc') {
       Write-Output "Recreating $container because plugin source mounts changed."
       Remove-DevContainer
     }
@@ -121,7 +121,7 @@ function Ensure-DevContainer {
       --label 'org.opensagetv.vibe.role=unified-dev' `
       --label "org.opensagetv.vibe.projects-root=$projectsId" `
       --label 'org.opensagetv.vibe.xmltv-project-name=opensagetv-vibe-Xmltv-Plugin' `
-      --label 'org.opensagetv.vibe.plugin-layout=canonical-plugin-names-v2' `
+      --label 'org.opensagetv.vibe.plugin-layout=canonical-plugin-names-v3-sagemc' `
       --label 'org.opensagetv.vibe.ffmpeg-plugin-project-name=opensagetv-vibe-FFmpeg-Plugin' `
       --entrypoint sleep `
       -v 'opensagetv-vibe-gradle-cache:/work/.gradle' `
@@ -136,7 +136,7 @@ function Ensure-DevContainer {
       -v "$projects\opensagetv-vibe-container:/workspace/container" `
       -v "$projects\opensagetv-vibe-logo:/workspace/logo" `
       -v "$projects\opensagetv-vibe-android-client:/workspace/android-client" `
-      -v "$projects\opensagetv-vibe-sagemc:/workspace/sagemc" `
+      -v "$projects\opensagetv-vibe-sagemc-Plugin:/workspace/sagemc" `
       -v "${root}:/workspace/release-manifest" `
       -v '/var/run/docker.sock:/var/run/docker.sock' `
       $image infinity | Out-Null

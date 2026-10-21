@@ -19,7 +19,7 @@ $repositories = [ordered]@{
   'opensagetv-vibe-tmdb-Plugin' = 'main'
   'opensagetv-vibe-logo' = 'main'
   'opensagetv-vibe-android-client' = 'main'
-  'opensagetv-vibe-sagemc' = 'main'
+  'opensagetv-vibe-sagemc-Plugin' = 'main'
   'opensagetv-vibe-archive' = 'main'
 }
 $manifestNames = @{
@@ -33,7 +33,7 @@ $manifestNames = @{
   'opensagetv-vibe-tmdb-Plugin' = 'tmdb'
   'opensagetv-vibe-logo' = 'logo'
   'opensagetv-vibe-android-client' = 'android_client'
-  'opensagetv-vibe-sagemc' = 'sagemc'
+  'opensagetv-vibe-sagemc-Plugin' = 'sagemc'
 }
 $manifest = $null
 if ($ResolvedManifest) {

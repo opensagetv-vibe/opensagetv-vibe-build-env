@@ -42,7 +42,7 @@ name = "opensagetv-vibe-Xmltv-Plugin"
 workflow = "Repository checks"
 
 [[projects]]
-name = "opensagetv-vibe-sagemc"
+name = "opensagetv-vibe-sagemc-Plugin"
 workflow = "Repository checks"
 
 [[projects]]

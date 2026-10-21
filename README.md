@@ -63,7 +63,7 @@ opensagetv-vibe-Xmltv-Plugin/
 opensagetv-vibe-tmdb-Plugin/
 opensagetv-vibe-logo/
 opensagetv-vibe-android-client/
-opensagetv-vibe-sagemc/
+opensagetv-vibe-sagemc-Plugin/
 opensagetv-vibe-WebClient-Plugin/
 opensagetv-vibe-archive/
 ```

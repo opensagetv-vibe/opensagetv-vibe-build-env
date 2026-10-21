@@ -3,7 +3,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; projects="$(cd "$root/.." && pwd)"
 android_project="${OPENSAGETV_VIBE_ANDROID_PROJECT_ROOT:-$projects/opensagetv-vibe-android-client}"
 android_project="$(cd "$android_project" && pwd)"
-sagemc_project="${OPENSAGETV_VIBE_SAGEMC_PROJECT_ROOT:-$projects/opensagetv-vibe-sagemc}"
+sagemc_project="${OPENSAGETV_VIBE_SAGEMC_PROJECT_ROOT:-$projects/opensagetv-vibe-sagemc-Plugin}"
 sagemc_project="$(cd "$sagemc_project" && pwd)"
 tmdb_project="${OPENSAGETV_VIBE_TMDB_PROJECT_ROOT:-$projects/opensagetv-vibe-tmdb-Plugin}"
 tmdb_project="$(cd "$tmdb_project" && pwd)"
@@ -143,7 +143,7 @@ container_ensure() {
       --label org.opensagetv.vibe.role=unified-dev \
       --label "org.opensagetv.vibe.projects-root=$projects_id" \
       --label org.opensagetv.vibe.xmltv-project-name=opensagetv-vibe-Xmltv-Plugin \
-      --label org.opensagetv.vibe.plugin-layout=canonical-plugin-names-v2 \
+      --label org.opensagetv.vibe.plugin-layout=canonical-plugin-names-v3-sagemc \
       --label org.opensagetv.vibe.ffmpeg-plugin-project-name=opensagetv-vibe-FFmpeg-Plugin \
       --label "org.opensagetv.vibe.android-project-root=$android_project_id" \
       --label "org.opensagetv.vibe.sagemc-project-root=$sagemc_project_id" \

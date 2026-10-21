@@ -11,7 +11,7 @@ $repos=@(
   'opensagetv-vibe-core-MCP-Plugin',
   'opensagetv-vibe-tmdb-Plugin',
   'opensagetv-vibe-logo','opensagetv-vibe-android-client',
-  'opensagetv-vibe-sagemc','opensagetv-vibe-archive'
+  'opensagetv-vibe-sagemc-Plugin','opensagetv-vibe-archive'
 )
 function Write-Ascii([string]$Path,[string[]]$Value){
   $parent=Split-Path -Parent $Path

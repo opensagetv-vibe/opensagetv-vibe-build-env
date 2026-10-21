@@ -24,7 +24,7 @@ $order=@(
   'opensagetv-vibe-tmdb-Plugin',
   'opensagetv-vibe-logo',
   'opensagetv-vibe-android-client',
-  'opensagetv-vibe-sagemc',
+  'opensagetv-vibe-sagemc-Plugin',
   'opensagetv-vibe-container',
   'opensagetv-vibe-archive'
 )

@@ -1,5 +1,15 @@
 # OpenSageTV Vibe build-environment handoff
 
+## SageMC development plugin rename (2026-10-21)
+
+SAGEMC-PLUGIN-001 follows opensagetv-vibe-sagemc-Plugin in checkout, registry,
+handoff and source dispatch. Stable /workspace/sagemc remains. Both launchers
+identify the new layout; the idle reusable container mount was refreshed with
+keys/caches retained. Workflow/syntax and twelve-project handoff selftest pass.
+Install dispatch now invokes the guarded stock-plugin development installer;
+offline recovery copying remains explicit install-offline. Pilot first, then
+dependent source CI. No new images or public SageMC release/catalog submission.
+
 ## Canonical plugin source names (2026-10-21)
 
 PLUGIN-RENAME-001 updates FFmpeg-Plugin, WebClient-Plugin, Xmltv-Plugin and

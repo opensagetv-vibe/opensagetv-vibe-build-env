@@ -22,7 +22,7 @@ SOURCES = {
     "tmdb": "https://github.com/opensagetv-vibe/opensagetv-vibe-tmdb-Plugin.git",
     "logo": "https://github.com/opensagetv-vibe/opensagetv-vibe-logo.git",
     "android_client": "https://github.com/opensagetv-vibe/opensagetv-vibe-android-client.git",
-    "sagemc": "https://github.com/opensagetv-vibe/opensagetv-vibe-sagemc.git",
+    "sagemc": "https://github.com/opensagetv-vibe/opensagetv-vibe-sagemc-Plugin.git",
 }
 
 

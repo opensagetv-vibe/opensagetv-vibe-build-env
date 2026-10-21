@@ -1,5 +1,9 @@
 # Changelog
 
+- 2026-10-21 SAGEMC-PLUGIN-001: follow SageMC-Plugin source naming and bounded
+  plugin development-install dispatch; retain offline recovery explicitly.
+  Workflow/controller/handoff checks pass, stable mounts and keys preserved.
+
 ## Canonical plugin names - 2026-10-21
 
 - Update four source repository names in checkout, GitHub, handoff and build

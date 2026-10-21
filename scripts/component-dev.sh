@@ -119,12 +119,14 @@ case "$project:$command" in
   opensagetv-vibe-tmdb-Plugin:install) artifact_only_install ;;
   opensagetv-vibe-tmdb-Plugin:all) exec "$unified" tmdb-all "$@" ;;
 
-  opensagetv-vibe-sagemc:test) exec "$unified" sagemc-test "$@" ;;
-  opensagetv-vibe-sagemc:validate) exec "$unified" sagemc-validate "$@" ;;
-  opensagetv-vibe-sagemc:build) exec "$unified" sagemc-build "$@" ;;
-  opensagetv-vibe-sagemc:install)
-    echo 'SKIPPED: run dev.cmd install on the commissioned Windows host for guarded Vibe-test SMB installation.'
+  opensagetv-vibe-sagemc-Plugin:test) exec "$unified" sagemc-test "$@" ;;
+  opensagetv-vibe-sagemc-Plugin:validate) exec "$unified" sagemc-validate "$@" ;;
+  opensagetv-vibe-sagemc-Plugin:build) exec "$unified" sagemc-build "$@" ;;
+  opensagetv-vibe-sagemc-Plugin:install)
+    exec python3 "$project_root/scripts/install_development.py" "$@"
     ;;
+  opensagetv-vibe-sagemc-Plugin:stage-plugin) exec python3 "$project_root/scripts/stage_development.py" "$@" ;;
+  opensagetv-vibe-sagemc-Plugin:install-offline) exec "$project_root/scripts/install.sh" "$@" ;;
 
   opensagetv-vibe-logo:test)
     syntax_check

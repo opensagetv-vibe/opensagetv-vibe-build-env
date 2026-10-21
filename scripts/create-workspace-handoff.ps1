@@ -11,7 +11,7 @@ $repos=@(
   'opensagetv-vibe-core-MCP-Plugin',
   'opensagetv-vibe-tmdb-Plugin',
   'opensagetv-vibe-logo',
-  'opensagetv-vibe-android-client','opensagetv-vibe-sagemc',
+  'opensagetv-vibe-android-client','opensagetv-vibe-sagemc-Plugin',
   'opensagetv-vibe-archive'
 )
 $stage=Join-Path ([IO.Path]::GetTempPath()) ('vibe-workspace-handoff-'+[guid]::NewGuid().ToString('N'))

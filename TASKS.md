@@ -10,6 +10,7 @@ the checklist change ledger; release evidence is also recorded in
 `CHANGELOG.md` and `HANDOFF.md`.
 
 
+
 - [ ] TOP PRIORITY: add a reproducible current-Ubuntu stock-Core build/runtime
   lane beside the existing Vibe lane. It must build canonical SageTV with the
   proposed GCC/64-bit, ImageLoader/native-library, launcher, and source-clean
@@ -32,6 +33,13 @@ the checklist change ledger; release evidence is also recorded in
   ignored legacy clean errors do not pollute clean-build logs.
 
 ## Checklist change ledger
+
+- [x] **SAGEMC-PLUGIN-001 dependency (2026-10-21):** Canonical SageMC-Plugin
+  registry/checkout/handoff/source mounts and bounded development-install
+  dispatch. Shared workflow, Bash/Python/PowerShell syntax and twelve-project
+  handoff selftest pass. Reusable container mount verified; native layout guard
+  prevents stale binds. Keys/caches/runtime destinations preserved. Source-only
+  pilot CI required before dependent pushes; no image or Core rebuild.
 
 - [x] **PLUGIN-RENAME-001 (2026-10-21):** Four canonical plugin roots now
   drive checkout, dispatch, GitHub registry, handoff and mount migration.
