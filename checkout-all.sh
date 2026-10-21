@@ -20,10 +20,10 @@ repositories=(
   opensagetv-vibe-core
   opensagetv-vibe-container
   opensagetv-vibe-ffmpeg-mim
-  opensagetv-vibe-SageTVFFmpegPlugin
+  opensagetv-vibe-FFmpeg-Plugin
   opensagetv-vibe-core-MCP-Plugin
-  opensagetv-vibe-xmltv-Plugin
-  opensagetv-vibe-tmdb
+  opensagetv-vibe-Xmltv-Plugin
+  opensagetv-vibe-tmdb-Plugin
   opensagetv-vibe-logo
   opensagetv-vibe-android-client
   opensagetv-vibe-sagemc
@@ -36,10 +36,10 @@ manifest_name() {
     opensagetv-vibe-core) echo core ;;
     opensagetv-vibe-container) echo container ;;
     opensagetv-vibe-ffmpeg-mim) echo ffmpeg_mim ;;
-    opensagetv-vibe-SageTVFFmpegPlugin) echo ffmpeg_plugin ;;
+    opensagetv-vibe-FFmpeg-Plugin) echo ffmpeg_plugin ;;
     opensagetv-vibe-core-MCP-Plugin) echo core_mcp ;;
-    opensagetv-vibe-xmltv-Plugin) echo xmltv_import ;;
-    opensagetv-vibe-tmdb) echo tmdb ;;
+    opensagetv-vibe-Xmltv-Plugin) echo xmltv_import ;;
+    opensagetv-vibe-tmdb-Plugin) echo tmdb ;;
     opensagetv-vibe-logo) echo logo ;;
     opensagetv-vibe-android-client) echo android_client ;;
     opensagetv-vibe-sagemc) echo sagemc ;;
@@ -73,8 +73,8 @@ for repository in "${repositories[@]}"; do
   fi
 
   branch=ubuntu26-modern-build
-  if [[ "$repository" == opensagetv-vibe-xmltv-Plugin ]]; then branch=main; fi
-  if [[ "$repository" == opensagetv-vibe-archive || "$repository" == opensagetv-vibe-logo || "$repository" == opensagetv-vibe-android-client || "$repository" == opensagetv-vibe-sagemc || "$repository" == opensagetv-vibe-tmdb || "$repository" == opensagetv-vibe-SageTVFFmpegPlugin || "$repository" == opensagetv-vibe-core-MCP-Plugin ]]; then
+  if [[ "$repository" == opensagetv-vibe-Xmltv-Plugin ]]; then branch=main; fi
+  if [[ "$repository" == opensagetv-vibe-archive || "$repository" == opensagetv-vibe-logo || "$repository" == opensagetv-vibe-android-client || "$repository" == opensagetv-vibe-sagemc || "$repository" == opensagetv-vibe-tmdb-Plugin || "$repository" == opensagetv-vibe-FFmpeg-Plugin || "$repository" == opensagetv-vibe-core-MCP-Plugin ]]; then
     branch=main
   fi
   target="$workspace/$repository"

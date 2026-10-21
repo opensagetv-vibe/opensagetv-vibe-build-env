@@ -9,6 +9,7 @@ This is the only active backlog for this repository. Completed work moves to
 the checklist change ledger; release evidence is also recorded in
 `CHANGELOG.md` and `HANDOFF.md`.
 
+
 - [ ] TOP PRIORITY: add a reproducible current-Ubuntu stock-Core build/runtime
   lane beside the existing Vibe lane. It must build canonical SageTV with the
   proposed GCC/64-bit, ImageLoader/native-library, launcher, and source-clean
@@ -31,6 +32,14 @@ the checklist change ledger; release evidence is also recorded in
   ignored legacy clean errors do not pollute clean-build logs.
 
 ## Checklist change ledger
+
+- [x] **PLUGIN-RENAME-001 (2026-10-21):** Four canonical plugin roots now
+  drive checkout, dispatch, GitHub registry, handoff and mount migration.
+  Workflow contracts, Bash/Python/PowerShell syntax and twelve-project handoff
+  selftest pass. Idle unified dev container recreated; four mounts readable,
+  named caches/persistent Android identity preserved. No server/runtime rebuild.
+  Workspace Android order389 reviewed unchanged; pilot CI required before
+  downstream pushes (publication verification remains workspace-owned).
 
 - [x] **XMLTV-PLUGIN-002 dependency (2026-10-18).** Rename active XMLTV
   checkout/registry/handoff/source URLs to opensagetv-vibe-xmltv-Plugin;

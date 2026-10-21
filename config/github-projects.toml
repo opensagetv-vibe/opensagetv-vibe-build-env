@@ -30,15 +30,15 @@ name = "opensagetv-vibe-core-MCP-Plugin"
 workflow = "Repository checks"
 
 [[projects]]
-name = "opensagetv-vibe-SageTVFFmpegPlugin"
+name = "opensagetv-vibe-FFmpeg-Plugin"
 workflow = "Repository checks"
 
 [[projects]]
-name = "opensagetv-vibe-tmdb"
+name = "opensagetv-vibe-tmdb-Plugin"
 workflow = "Repository checks"
 
 [[projects]]
-name = "opensagetv-vibe-xmltv-Plugin"
+name = "opensagetv-vibe-Xmltv-Plugin"
 workflow = "Repository checks"
 
 [[projects]]
@@ -46,7 +46,7 @@ name = "opensagetv-vibe-sagemc"
 workflow = "Repository checks"
 
 [[projects]]
-name = "opensagetv-vibe-web-client-plugin"
+name = "opensagetv-vibe-WebClient-Plugin"
 workflow = "Repository checks"
 
 [[projects]]

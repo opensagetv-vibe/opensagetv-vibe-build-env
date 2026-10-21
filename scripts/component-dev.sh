@@ -74,11 +74,11 @@ case "$project:$command" in
   opensagetv-vibe-ffmpeg-mim:install) exec "$unified" test-mim "$@" ;;
   opensagetv-vibe-ffmpeg-mim:package-plugin-runtime) exec "$unified" ffmpeg-runtime-package "$@" ;;
 
-  opensagetv-vibe-SageTVFFmpegPlugin:test) exec "$unified" ffmpeg-plugin-test "$@" ;;
-  opensagetv-vibe-SageTVFFmpegPlugin:validate) exec "$unified" ffmpeg-plugin-validate "$@" ;;
-  opensagetv-vibe-SageTVFFmpegPlugin:build) exec "$unified" ffmpeg-plugin-build "$@" ;;
-  opensagetv-vibe-SageTVFFmpegPlugin:install) artifact_only_install ;;
-  opensagetv-vibe-SageTVFFmpegPlugin:all) exec "$unified" ffmpeg-plugin-all "$@" ;;
+  opensagetv-vibe-FFmpeg-Plugin:test) exec "$unified" ffmpeg-plugin-test "$@" ;;
+  opensagetv-vibe-FFmpeg-Plugin:validate) exec "$unified" ffmpeg-plugin-validate "$@" ;;
+  opensagetv-vibe-FFmpeg-Plugin:build) exec "$unified" ffmpeg-plugin-build "$@" ;;
+  opensagetv-vibe-FFmpeg-Plugin:install) artifact_only_install ;;
+  opensagetv-vibe-FFmpeg-Plugin:all) exec "$unified" ffmpeg-plugin-all "$@" ;;
 
   opensagetv-vibe-core-MCP-Plugin:test) exec "$unified" core-mcp-test "$@" ;;
   opensagetv-vibe-core-MCP-Plugin:validate) exec "$unified" core-mcp-validate "$@" ;;
@@ -93,31 +93,31 @@ case "$project:$command" in
   opensagetv-vibe-client-extension-Plugin:install) artifact_only_install ;;
   opensagetv-vibe-client-extension-Plugin:all) exec "$unified" client-extension-all "$@" ;;
 
-  opensagetv-vibe-web-client-plugin:test) exec "$unified" web-client-test "$@" ;;
-  opensagetv-vibe-web-client-plugin:validate) exec "$unified" web-client-validate "$@" ;;
-  opensagetv-vibe-web-client-plugin:build) exec "$unified" web-client-build "$@" ;;
-  opensagetv-vibe-web-client-plugin:install) artifact_only_install ;;
-  opensagetv-vibe-web-client-plugin:all) exec "$unified" web-client-all "$@" ;;
+  opensagetv-vibe-WebClient-Plugin:test) exec "$unified" web-client-test "$@" ;;
+  opensagetv-vibe-WebClient-Plugin:validate) exec "$unified" web-client-validate "$@" ;;
+  opensagetv-vibe-WebClient-Plugin:build) exec "$unified" web-client-build "$@" ;;
+  opensagetv-vibe-WebClient-Plugin:install) artifact_only_install ;;
+  opensagetv-vibe-WebClient-Plugin:all) exec "$unified" web-client-all "$@" ;;
 
-  opensagetv-vibe-xmltv-Plugin:test)
+  opensagetv-vibe-Xmltv-Plugin:test)
     syntax_check
     test -f "$project_root/SAGETV_SERVER_ROOT_Contents/xmltv_src/XMLTVImportPlugin.java"
     echo 'PASS: XMLTV source layout'
     ;;
-  opensagetv-vibe-xmltv-Plugin:validate)
+  opensagetv-vibe-Xmltv-Plugin:validate)
     python3 "$project_root/scripts/package.py" validate
-    test -f "$(dirname "$project_root")/opensagetv-vibe-SageTVFFmpegPlugin/.deps/stock/Sage.jar"
+    test -f "$(dirname "$project_root")/opensagetv-vibe-FFmpeg-Plugin/.deps/stock/Sage.jar"
     echo 'PASS: XMLTV stock Sage.jar compile dependency is staged'
     ;;
-  opensagetv-vibe-xmltv-Plugin:build) exec "$unified" xmltv "$@" ;;
-  opensagetv-vibe-xmltv-Plugin:package) exec "$unified" xmltv "$@" ;;
-  opensagetv-vibe-xmltv-Plugin:install) artifact_only_install ;;
+  opensagetv-vibe-Xmltv-Plugin:build) exec "$unified" xmltv "$@" ;;
+  opensagetv-vibe-Xmltv-Plugin:package) exec "$unified" xmltv "$@" ;;
+  opensagetv-vibe-Xmltv-Plugin:install) artifact_only_install ;;
 
-  opensagetv-vibe-tmdb:test) exec "$unified" tmdb-test "$@" ;;
-  opensagetv-vibe-tmdb:validate) exec "$unified" tmdb-validate "$@" ;;
-  opensagetv-vibe-tmdb:build) exec "$unified" tmdb-build "$@" ;;
-  opensagetv-vibe-tmdb:install) artifact_only_install ;;
-  opensagetv-vibe-tmdb:all) exec "$unified" tmdb-all "$@" ;;
+  opensagetv-vibe-tmdb-Plugin:test) exec "$unified" tmdb-test "$@" ;;
+  opensagetv-vibe-tmdb-Plugin:validate) exec "$unified" tmdb-validate "$@" ;;
+  opensagetv-vibe-tmdb-Plugin:build) exec "$unified" tmdb-build "$@" ;;
+  opensagetv-vibe-tmdb-Plugin:install) artifact_only_install ;;
+  opensagetv-vibe-tmdb-Plugin:all) exec "$unified" tmdb-all "$@" ;;
 
   opensagetv-vibe-sagemc:test) exec "$unified" sagemc-test "$@" ;;
   opensagetv-vibe-sagemc:validate) exec "$unified" sagemc-validate "$@" ;;

@@ -1,5 +1,16 @@
 # OpenSageTV Vibe build-environment handoff
 
+## Canonical plugin source names (2026-10-21)
+
+PLUGIN-RENAME-001 updates FFmpeg-Plugin, WebClient-Plugin, Xmltv-Plugin and
+tmdb-Plugin checkout/GitHub/dispatch/handoff paths. Runtime mount destinations
+and installed plugin identities are unchanged. Case-sensitive migration guards
+refresh stale source binds; the idle unified dev container was recreated and
+all four mounts verified. Named caches and persistent Android keys remain.
+Workflow contracts, syntax and twelve-repository handoff selftest pass. Push
+this pilot first and require exact-HEAD CI before dependent repository pushes.
+No server restart/image rebuild or unrelated Android matrix was needed.
+
 ## XMLTV Standard-plugin rename (2026-10-18)
 
 Active checkout/GitHub identity is opensagetv-vibe-xmltv-Plugin, replacing

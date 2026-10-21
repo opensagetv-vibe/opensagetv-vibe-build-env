@@ -5,15 +5,15 @@ android_project="${OPENSAGETV_VIBE_ANDROID_PROJECT_ROOT:-$projects/opensagetv-vi
 android_project="$(cd "$android_project" && pwd)"
 sagemc_project="${OPENSAGETV_VIBE_SAGEMC_PROJECT_ROOT:-$projects/opensagetv-vibe-sagemc}"
 sagemc_project="$(cd "$sagemc_project" && pwd)"
-tmdb_project="${OPENSAGETV_VIBE_TMDB_PROJECT_ROOT:-$projects/opensagetv-vibe-tmdb}"
+tmdb_project="${OPENSAGETV_VIBE_TMDB_PROJECT_ROOT:-$projects/opensagetv-vibe-tmdb-Plugin}"
 tmdb_project="$(cd "$tmdb_project" && pwd)"
-ffmpeg_plugin_project="${OPENSAGETV_VIBE_FFMPEG_PLUGIN_PROJECT_ROOT:-$projects/opensagetv-vibe-SageTVFFmpegPlugin}"
+ffmpeg_plugin_project="${OPENSAGETV_VIBE_FFMPEG_PLUGIN_PROJECT_ROOT:-$projects/opensagetv-vibe-FFmpeg-Plugin}"
 ffmpeg_plugin_project="$(cd "$ffmpeg_plugin_project" && pwd)"
 core_mcp_project="${OPENSAGETV_VIBE_CORE_MCP_PROJECT_ROOT:-$projects/opensagetv-vibe-core-MCP-Plugin}"
 core_mcp_project="$(cd "$core_mcp_project" && pwd)"
 client_extension_project="${OPENSAGETV_VIBE_CLIENT_EXTENSION_PROJECT_ROOT:-$projects/opensagetv-vibe-client-extension-Plugin}"
 client_extension_project="$(cd "$client_extension_project" && pwd)"
-web_client_project="${OPENSAGETV_VIBE_WEB_CLIENT_PROJECT_ROOT:-$projects/opensagetv-vibe-web-client-plugin}"
+web_client_project="${OPENSAGETV_VIBE_WEB_CLIENT_PROJECT_ROOT:-$projects/opensagetv-vibe-WebClient-Plugin}"
 web_client_project="$(cd "$web_client_project" && pwd)"
 image="${OPENSAGETV_VIBE_BUILD_IMAGE:-opensagetv-vibe-build-env:u26-j11}"
 container="${OPENSAGETV_VIBE_DEV_CONTAINER:-opensagetv-vibe-dev}"
@@ -126,18 +126,25 @@ container_ensure() {
       fi
     fi
   fi
-  # A repository rename keeps the same sibling root but invalidates this bind.
+  # A repository rename keeps the same sibling root but invalidates these binds.
   # Recreate only the reusable dev container; named caches/ADB identity persist.
   if docker container inspect "$container" >/dev/null 2>&1 && \
-      [[ "$(docker inspect "$container" --format '{{index .Config.Labels "org.opensagetv.vibe.xmltv-project-name"}}')" != opensagetv-vibe-xmltv-Plugin ]]; then
+      [[ "$(docker inspect "$container" --format '{{index .Config.Labels "org.opensagetv.vibe.xmltv-project-name"}}')" != opensagetv-vibe-Xmltv-Plugin ]]; then
     echo "Recreating $container because the XMLTV project mount changed."
+    container_remove
+  fi
+  if docker container inspect "$container" >/dev/null 2>&1 && \
+      [[ "$(docker inspect "$container" --format '{{index .Config.Labels "org.opensagetv.vibe.ffmpeg-plugin-project-name"}}')" != opensagetv-vibe-FFmpeg-Plugin ]]; then
+    echo "Recreating $container because the FFmpeg plugin project mount changed."
     container_remove
   fi
   if ! docker container inspect "$container" >/dev/null 2>&1; then
     docker create --name "$container" --init \
       --label org.opensagetv.vibe.role=unified-dev \
       --label "org.opensagetv.vibe.projects-root=$projects_id" \
-      --label org.opensagetv.vibe.xmltv-project-name=opensagetv-vibe-xmltv-Plugin \
+      --label org.opensagetv.vibe.xmltv-project-name=opensagetv-vibe-Xmltv-Plugin \
+      --label org.opensagetv.vibe.plugin-layout=canonical-plugin-names-v2 \
+      --label org.opensagetv.vibe.ffmpeg-plugin-project-name=opensagetv-vibe-FFmpeg-Plugin \
       --label "org.opensagetv.vibe.android-project-root=$android_project_id" \
       --label "org.opensagetv.vibe.sagemc-project-root=$sagemc_project_id" \
       --label "org.opensagetv.vibe.tmdb-project-root=$tmdb_project_id" \
@@ -153,7 +160,7 @@ container_ensure() {
       -v "$core_mcp_project:/workspace/core-mcp-plugin" \
       -v "$client_extension_project:/workspace/client-extension-plugin" \
       -v "$web_client_project:/workspace/web-client-plugin" \
-      -v "$projects/opensagetv-vibe-xmltv-Plugin:/workspace/xmltv-import" \
+      -v "$projects/opensagetv-vibe-Xmltv-Plugin:/workspace/xmltv-import" \
       -v "$tmdb_project:/workspace/tmdb" \
       -v "$projects/opensagetv-vibe-container:/workspace/container" \
       -v "$projects/opensagetv-vibe-logo:/workspace/logo" \

@@ -102,8 +102,17 @@ function Ensure-DevContainer {
 
   if (Test-DockerObject @('container','inspect',$container)) {
     $xmltvName = (& docker inspect $container --format '{{index .Config.Labels "org.opensagetv.vibe.xmltv-project-name"}}').Trim()
-    if ($xmltvName -ne 'opensagetv-vibe-xmltv-Plugin') {
+    if ($xmltvName -cne 'opensagetv-vibe-Xmltv-Plugin') {
       Write-Output "Recreating $container because the XMLTV project mount changed."
+      Remove-DevContainer
+    }
+  }
+  # Case matters to Linux binds even when the Windows checkout is insensitive.
+  # A single layout identity covers all four renamed source roots, not plugin IDs.
+  if (Test-DockerObject @('container','inspect',$container)) {
+    $layout = (& docker inspect $container --format '{{index .Config.Labels "org.opensagetv.vibe.plugin-layout"}}').Trim()
+    if ($layout -cne 'canonical-plugin-names-v2') {
+      Write-Output "Recreating $container because plugin source mounts changed."
       Remove-DevContainer
     }
   }
@@ -111,17 +120,19 @@ function Ensure-DevContainer {
     & docker create --name $container --init `
       --label 'org.opensagetv.vibe.role=unified-dev' `
       --label "org.opensagetv.vibe.projects-root=$projectsId" `
-      --label 'org.opensagetv.vibe.xmltv-project-name=opensagetv-vibe-xmltv-Plugin' `
+      --label 'org.opensagetv.vibe.xmltv-project-name=opensagetv-vibe-Xmltv-Plugin' `
+      --label 'org.opensagetv.vibe.plugin-layout=canonical-plugin-names-v2' `
+      --label 'org.opensagetv.vibe.ffmpeg-plugin-project-name=opensagetv-vibe-FFmpeg-Plugin' `
       --entrypoint sleep `
       -v 'opensagetv-vibe-gradle-cache:/work/.gradle' `
       -v 'opensagetv-vibe-ccache:/work/.ccache' `
       -v "$projects\opensagetv-vibe-core:/work/sagetv" `
       -v "$projects\opensagetv-vibe-ffmpeg-mim:/project" `
-      -v "$projects\opensagetv-vibe-SageTVFFmpegPlugin:/workspace/ffmpeg-plugin" `
+      -v "$projects\opensagetv-vibe-FFmpeg-Plugin:/workspace/ffmpeg-plugin" `
       -v "$projects\opensagetv-vibe-core-MCP-Plugin:/workspace/core-mcp-plugin" `
-      -v "$projects\opensagetv-vibe-web-client-plugin:/workspace/web-client-plugin" `
-      -v "$projects\opensagetv-vibe-xmltv-Plugin:/workspace/xmltv-import" `
-      -v "$projects\opensagetv-vibe-tmdb:/workspace/tmdb" `
+      -v "$projects\opensagetv-vibe-WebClient-Plugin:/workspace/web-client-plugin" `
+      -v "$projects\opensagetv-vibe-Xmltv-Plugin:/workspace/xmltv-import" `
+      -v "$projects\opensagetv-vibe-tmdb-Plugin:/workspace/tmdb" `
       -v "$projects\opensagetv-vibe-container:/workspace/container" `
       -v "$projects\opensagetv-vibe-logo:/workspace/logo" `
       -v "$projects\opensagetv-vibe-android-client:/workspace/android-client" `

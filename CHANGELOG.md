@@ -1,5 +1,12 @@
 # Changelog
 
+## Canonical plugin names - 2026-10-21
+
+- Update four source repository names in checkout, GitHub, handoff and build
+  integration; migrate stale reusable-container binds without losing caches.
+- Preserve runtime mount destinations and legacy installed plugin identities.
+- Validate workflow contracts, controller syntax and twelve-repository handoff.
+
 ## XMLTV plugin integration - 2026-10-18
 
 - Follow the renamed opensagetv-vibe-xmltv-Plugin checkout in clones, mounts,

@@ -57,14 +57,14 @@ opensagetv-vibe-build-env/
 opensagetv-vibe-container/
 opensagetv-vibe-core/
 opensagetv-vibe-ffmpeg-mim/
-opensagetv-vibe-SageTVFFmpegPlugin/
+opensagetv-vibe-FFmpeg-Plugin/
 opensagetv-vibe-core-MCP-Plugin/
-opensagetv-vibe-xmltv-Plugin/
-opensagetv-vibe-tmdb/
+opensagetv-vibe-Xmltv-Plugin/
+opensagetv-vibe-tmdb-Plugin/
 opensagetv-vibe-logo/
 opensagetv-vibe-android-client/
 opensagetv-vibe-sagemc/
-opensagetv-vibe-web-client-plugin/
+opensagetv-vibe-WebClient-Plugin/
 opensagetv-vibe-archive/
 ```
 

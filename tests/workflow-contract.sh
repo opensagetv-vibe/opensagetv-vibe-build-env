@@ -8,10 +8,10 @@ repos=(
   opensagetv-vibe-core
   opensagetv-vibe-container
   opensagetv-vibe-ffmpeg-mim
-  opensagetv-vibe-SageTVFFmpegPlugin
+  opensagetv-vibe-FFmpeg-Plugin
   opensagetv-vibe-core-MCP-Plugin
-  opensagetv-vibe-xmltv-Plugin
-  opensagetv-vibe-tmdb
+  opensagetv-vibe-Xmltv-Plugin
+  opensagetv-vibe-tmdb-Plugin
   opensagetv-vibe-logo
   opensagetv-vibe-android-client
   opensagetv-vibe-sagemc
@@ -72,14 +72,14 @@ grep -Fq 'opensagetv-vibe-tmdb.plugin.xml' "$build_env/scripts/package-release.s
 grep -Fq 'TMDB_ATTRIBUTION.md' "$build_env/scripts/package-release.sh"
 grep -Fq -- '--repo tmdb "$tmdb"' "$build_env/scripts/package-release.sh"
 grep -Fq -- '--tmdb-version-file "$tmdb/release.properties"' "$build_env/scripts/package-release.sh"
-grep -Fq '"tmdb": "https://github.com/opensagetv-vibe/opensagetv-vibe-tmdb.git"' \
+grep -Fq '"tmdb": "https://github.com/opensagetv-vibe/opensagetv-vibe-tmdb-Plugin.git"' \
   "$build_env/scripts/generate-release-manifest.py"
 echo 'PASS: unified release stages and records the standalone TMDB component'
 
 grep -Fq 'components/ffmpeg-plugin' "$build_env/scripts/package-release.sh"
 grep -Fq -- '--repo ffmpeg_plugin "$ffmpeg_plugin"' "$build_env/scripts/package-release.sh"
 grep -Fq -- '--ffmpeg-plugin-version-file "$ffmpeg_plugin/release.properties"' "$build_env/scripts/package-release.sh"
-grep -Fq '"ffmpeg_plugin": "https://github.com/opensagetv-vibe/opensagetv-vibe-SageTVFFmpegPlugin.git"' \
+grep -Fq '"ffmpeg_plugin": "https://github.com/opensagetv-vibe/opensagetv-vibe-FFmpeg-Plugin.git"' \
   "$build_env/scripts/generate-release-manifest.py"
 echo 'PASS: unified release stages and records the stock-server FFmpeg plugin'
 
@@ -104,10 +104,21 @@ echo 'PASS: Client Extension source follows the shared GitHub gate; archive stay
 
 for controller in opensagetv-vibe-dev.sh opensagetv-vibe-dev.ps1; do
   grep -Fq 'org.opensagetv.vibe.xmltv-project-name' "$build_env/$controller"
-  grep -Fq 'opensagetv-vibe-xmltv-Plugin:/workspace/xmltv-import' "$build_env/$controller"
+  grep -Fq 'opensagetv-vibe-Xmltv-Plugin:/workspace/xmltv-import' "$build_env/$controller"
 done
-grep -Fq 'opensagetv-vibe-xmltv-Plugin:package)' "$build_env/scripts/component-dev.sh"
+grep -Fq 'opensagetv-vibe-Xmltv-Plugin:package)' "$build_env/scripts/component-dev.sh"
 grep -Fq '.deps/stock/Sage.jar' "$build_env/scripts/component-dev.sh"
-grep -Fq "'opensagetv-vibe-xmltv-Plugin' = 'main'" "$build_env/checkout-all.ps1"
-grep -Fq '"$repository" == opensagetv-vibe-xmltv-Plugin ]]; then branch=main' "$build_env/checkout-all.sh"
+grep -Fq "'opensagetv-vibe-Xmltv-Plugin' = 'main'" "$build_env/checkout-all.ps1"
+grep -Fq '"$repository" == opensagetv-vibe-Xmltv-Plugin ]]; then branch=main' "$build_env/checkout-all.sh"
 echo 'PASS: XMLTV rename refreshes stale mounts and uses stock Core for packaging'
+
+for controller in opensagetv-vibe-dev.sh opensagetv-vibe-dev.ps1; do
+  grep -Fq 'org.opensagetv.vibe.ffmpeg-plugin-project-name' "$build_env/$controller"
+  grep -Fq 'opensagetv-vibe-FFmpeg-Plugin' "$build_env/$controller"
+  grep -Fq '/workspace/ffmpeg-plugin' "$build_env/$controller"
+  grep -Fq 'opensagetv-vibe-WebClient-Plugin' "$build_env/$controller"
+  grep -Fq 'opensagetv-vibe-tmdb-Plugin:/workspace/tmdb' "$build_env/$controller" || \
+    grep -Fq 'projects/opensagetv-vibe-tmdb-Plugin}' "$build_env/$controller"
+done
+grep -Fq -- "-cne 'opensagetv-vibe-Xmltv-Plugin'" "$build_env/opensagetv-vibe-dev.ps1"
+echo 'PASS: canonical plugin source names preserve runtime manifest identities'
